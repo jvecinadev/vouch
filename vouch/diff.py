@@ -8,6 +8,18 @@ from .models import ChangedFile
 HUNK = re.compile(r"^@@ -\d+(?:,(\d+))? \+(\d+)(?:,(\d+))? @@")
 
 
+def is_diff(text: str) -> bool:
+    return any(line.startswith("+++ ") for line in text.splitlines())
+
+
+def code_to_diff(code: str, path: str) -> str:
+    """Wrap plain code as a git diff that adds it as a new file, so the normal pipeline can scan it."""
+    lines = code.splitlines()
+    body = "".join(f"+{line}\n" for line in lines)
+    return (f"diff --git a/{path} b/{path}\nnew file mode 100644\n--- /dev/null\n+++ b/{path}\n"
+            f"@@ -0,0 +1,{len(lines)} @@\n{body}")
+
+
 def parse_diff(diff_text: str) -> list:
     files: list = []
     path = None
@@ -68,5 +80,5 @@ def write_workspace(files: list) -> Path:
         if root not in target.parents:            # never write outside the workspace
             continue
         target.parent.mkdir(parents=True, exist_ok=True)
-        target.write_text(f.new_text, newline="\n")
+        target.write_text(f.new_text, encoding="utf-8", newline="\n")
     return root

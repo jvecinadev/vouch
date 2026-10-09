@@ -1,0 +1,61 @@
+rules:
+  - id: vouch-php-sql-injection
+    languages: [php]
+    severity: ERROR
+    message: SQL query built by joining strings can allow SQL injection. Use a prepared statement (PDO::prepare).
+    metadata:
+      cwe: ["CWE-89: SQL Injection"]
+    pattern-either:
+      - patterns:
+          - pattern: '"$SQL" . $X'
+          - metavariable-regex:
+              metavariable: $SQL
+              regex: (?i)^["']?\s*(select|insert|update|delete)\s
+      - pattern-regex: (?i)"\s*(select|insert|update|delete)\s[^"]*\$[a-z_{]
+
+  - id: vouch-php-command-injection
+    languages: [php]
+    severity: ERROR
+    message: Shell command built from a variable can allow command injection. Use escapeshellarg() or avoid the shell.
+    metadata:
+      cwe: ["CWE-78: OS Command Injection"]
+    patterns:
+      - pattern-either:
+          - pattern: system($CMD, ...)
+          - pattern: exec($CMD, ...)
+          - pattern: shell_exec($CMD, ...)
+          - pattern: passthru($CMD, ...)
+          - pattern: popen($CMD, ...)
+          - pattern: proc_open($CMD, ...)
+      - pattern-not: $F('...', ...)
+      - pattern-not: $F("...", ...)
+
+  - id: vouch-php-eval
+    languages: [php]
+    severity: ERROR
+    message: eval() on a non-constant value can run attacker-controlled code.
+    metadata:
+      cwe: ["CWE-95: Eval Injection"]
+    patterns:
+      - pattern: eval($X)
+      - pattern-not: eval("...")
+
+  - id: vouch-php-hardcoded-secret
+    options:
+      constant_propagation: false
+    languages: [php]
+    severity: WARNING
+    message: A secret is written directly in the source code. Read it with getenv() instead.
+    metadata:
+      cwe: ["CWE-798: Use of Hard-coded Credentials"]
+    patterns:
+      - pattern-either:
+          - pattern: $K = "$V";
+          - pattern: $K = '$V';
+          - pattern: define("$K", "$V");
+      - metavariable-regex:
+          metavariable: $K
+          regex: (?i).*(password|passwd|pwd|secret|api_?key|token).*
+      - metavariable-regex:
+          metavariable: $V
+          regex: ^["']?[^"']{4,}

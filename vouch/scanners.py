@@ -5,6 +5,7 @@ import os
 import shutil
 import subprocess
 import sys
+from pathlib import Path
 
 import config
 from .models import Finding
@@ -18,6 +19,20 @@ def _has_bandit() -> bool:
     return importlib.util.find_spec("bandit") is not None   # works even if the venv isn't "activated"
 
 
+def _semgrep_cmd():
+    """semgrep next to this Python (the venv's Scripts/ or bin/), else on PATH. None if missing."""
+    here = Path(sys.executable).parent
+    for name in ("semgrep.exe", "semgrep"):
+        if (here / name).is_file():
+            return str(here / name)
+    return shutil.which("semgrep")
+
+
+# Read scanner output as UTF-8; Windows would otherwise decode it as cp1252.
+_RUN = dict(capture_output=True, text=True, encoding="utf-8", errors="replace",
+            env={**os.environ, "PYTHONUTF8": "1"})
+
+
 def _rel(file_path, base) -> str:
     """Relative path with forward slashes, so Windows paths match the diff's a/b paths."""
     return os.path.relpath(file_path, str(base)).replace(os.sep, "/")
@@ -25,14 +40,14 @@ def _rel(file_path, base) -> str:
 
 def scanner_status() -> dict:
     return {"bandit": _has_bandit(),
-            "semgrep": shutil.which("semgrep") is not None}
+            "semgrep": _semgrep_cmd() is not None}
 
 
 def run_bandit(path) -> list:
     if not _has_bandit():
         return []
     proc = subprocess.run([sys.executable, "-m", "bandit", "-r", str(path), "-f", "json", "-q"],
-                          capture_output=True, text=True)   # exit code 1 just means "issues found"
+                          **_RUN)   # exit code 1 just means "issues found"
     try:
         data = json.loads(proc.stdout or "{}")
     except json.JSONDecodeError:
@@ -51,11 +66,12 @@ def run_bandit(path) -> list:
 
 
 def run_semgrep(path) -> list:
-    if not shutil.which("semgrep") or not os.path.isdir(config.RULES_DIR):
+    semgrep = _semgrep_cmd()
+    if not semgrep or not os.path.isdir(config.RULES_DIR):
         return []
-    proc = subprocess.run(["semgrep", "--config", config.RULES_DIR, "--json", "--quiet",
+    proc = subprocess.run([semgrep, "--config", config.RULES_DIR, "--json", "--quiet",
                            "--metrics=off", "--disable-version-check", str(path)],
-                          capture_output=True, text=True)
+                          **_RUN)
     try:
         data = json.loads(proc.stdout or "{}")
     except json.JSONDecodeError:

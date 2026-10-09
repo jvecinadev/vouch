@@ -1,4 +1,12 @@
 gradio
 bandit
+semgrep
 ollama
 pytest
+tree-sitter
+tree-sitter-javascript
+tree-sitter-typescript
+tree-sitter-java
+tree-sitter-go
+tree-sitter-php
+ 

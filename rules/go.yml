@@ -1,0 +1,52 @@
+rules:
+  - id: vouch-go-sql-injection
+    languages: [go]
+    severity: ERROR
+    message: SQL query built by joining strings can allow SQL injection. Use placeholders (db.Query(q, args...)).
+    metadata:
+      cwe: ["CWE-89: SQL Injection"]
+    pattern-either:
+      - patterns:
+          - pattern: '"$SQL" + $X'
+          - metavariable-regex:
+              metavariable: $SQL
+              regex: (?i)^"?\s*(select|insert|update|delete)\s
+      - patterns:
+          - pattern: fmt.Sprintf("$SQL", ...)
+          - metavariable-regex:
+              metavariable: $SQL
+              regex: (?i)^"?\s*(select|insert|update|delete)\s.*%[sv]
+
+  - id: vouch-go-command-injection
+    languages: [go]
+    severity: ERROR
+    message: Shell command built from a variable can allow command injection. Call the program directly with separate arguments.
+    metadata:
+      cwe: ["CWE-78: OS Command Injection"]
+    patterns:
+      - pattern-either:
+          - pattern: exec.Command("$SH", "-c", $CMD, ...)
+          - pattern: exec.CommandContext($CTX, "$SH", "-c", $CMD, ...)
+      - pattern-not: exec.Command("$SH", "-c", "...", ...)
+      - pattern-not: exec.CommandContext($CTX, "$SH", "-c", "...", ...)
+
+  - id: vouch-go-hardcoded-secret
+    options:
+      constant_propagation: false
+    languages: [go]
+    severity: WARNING
+    message: A secret is written directly in the source code. Read it with os.Getenv() instead.
+    metadata:
+      cwe: ["CWE-798: Use of Hard-coded Credentials"]
+    patterns:
+      - pattern-either:
+          - pattern: $K := "$V"
+          - pattern: var $K = "$V"
+          - pattern: var $K string = "$V"
+          - pattern: const $K = "$V"
+      - metavariable-regex:
+          metavariable: $K
+          regex: (?i).*(password|passwd|pwd|secret|api_?key|token).*
+      - metavariable-regex:
+          metavariable: $V
+          regex: ^"?[^"]{4,}
