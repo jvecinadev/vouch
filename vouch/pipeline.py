@@ -12,7 +12,9 @@ from .languages import EXTENSION, NAMES, guess_language, is_supported, supported
 from .llm import llm_status
 from .models import Badge
 from .patch import fix_with_retry
-from .scanners import merge_findings, run_scanners
+from .review import review_diff
+from .safeguards import removed_safeguards
+from .scanners import SEV_ORDER, merge_findings, run_scanners
 from .triage import triage_finding
 
 
@@ -43,13 +45,23 @@ def scan(diff_text: str, language: str = "auto", source_root=None):
         return
     workspace = write_workspace(files)
     try:
-        yield "status", "Scanning with Bandit and Semgrep"
+        yield "status", "Scanning with Bandit and Semgrep, and checking for removed safeguards"
         baseline = run_scanners(workspace)
-        findings = merge_findings(baseline, files)[:config.MAX_FINDINGS]
-        if not findings:
-            yield "status", "No issues detected by the scanner rules (this is not a guarantee of safety)"
-            return
+        found = merge_findings(baseline, files)
+        found += removed_safeguards(files, found)
+        found.sort(key=lambda f: (SEV_ORDER.get(f.severity, 9), f.file, f.line))
         model = llm_status()
+        if model["ok"]:
+            yield "status", "The model is reviewing the diff for issues no rule covers"
+            ai, errors = review_diff(files, found)
+            found += ai
+            for err in errors:
+                yield "status", err
+        findings = found[:config.MAX_FINDINGS]
+        if not findings:
+            checks = "the scanners, the safeguard check" + (" or the model review" if model["ok"] else "")
+            yield "status", f"No issues detected by {checks} (this is not a guarantee of safety)"
+            return
         if not model["ok"]:
             yield "status", f"Scanner-only mode. {model['reason']}"
             for f in findings:

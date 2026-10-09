@@ -59,3 +59,41 @@ rules:
       - metavariable-regex:
           metavariable: $V
           regex: ^["']?[^"']{4,}
+
+  - id: vouch-php-loose-secret-compare
+    languages: [php]
+    severity: ERROR
+    message: >-
+      A hash, token or password is compared with == / !=. PHP's loose comparison has type juggling
+      (e.g. "0e123" == "0e456" is true) and leaks timing. Use hash_equals($known, $input),
+      or password_verify() for passwords.
+    metadata:
+      cwe: ["CWE-208: Observable Timing Discrepancy"]
+    patterns:
+      - pattern-either:
+          - patterns:
+              - pattern: $A == $B
+              - metavariable-regex:
+                  metavariable: $A
+                  regex: (?i).*(hash|token|signature|hmac|digest|nonce|otp|passw|secret|api_?key).*
+          - patterns:
+              - pattern: $A == $B
+              - metavariable-regex:
+                  metavariable: $B
+                  regex: (?i).*(hash|token|signature|hmac|digest|nonce|otp|passw|secret|api_?key).*
+          - patterns:
+              - pattern: $A != $B
+              - metavariable-regex:
+                  metavariable: $A
+                  regex: (?i).*(hash|token|signature|hmac|digest|nonce|otp|passw|secret|api_?key).*
+          - patterns:
+              - pattern: $A != $B
+              - metavariable-regex:
+                  metavariable: $B
+                  regex: (?i).*(hash|token|signature|hmac|digest|nonce|otp|passw|secret|api_?key).*
+      - pattern-not: $A == null
+      - pattern-not: $A != null
+      - pattern-not: $A == ""
+      - pattern-not: $A != ""
+      - pattern-not: $A == false
+      - pattern-not: $A != false

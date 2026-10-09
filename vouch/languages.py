@@ -105,3 +105,28 @@ def check_syntax_text(text: str, lang: Optional[str]) -> tuple:
     bad = _first_error(tree.root_node) or tree.root_node
     what = f"missing {bad.type}" if bad.is_missing else "unexpected code"
     return False, f"{what} (line {bad.start_point[0] + 1})"
+
+
+def count_syntax_errors(text: str, lang: Optional[str]) -> int:
+    """0 = parses. Lets the verifier accept a patch to a partial file that had errors before the patch."""
+    if lang == "python":
+        import textwrap
+        for t in (text, textwrap.dedent(text)):
+            try:
+                ast.parse(t)
+                return 0
+            except SyntaxError:
+                pass
+        return 1
+    if check_syntax_text(text, lang)[0]:
+        return 0
+    try:
+        root = _parser(lang).parse(text.encode("utf-8")).root_node
+    except Exception:
+        return 10 ** 6
+    stack, n = [root], 0
+    while stack:
+        node = stack.pop()
+        n += node.is_error or node.is_missing
+        stack.extend(node.children)
+    return max(n, 1)

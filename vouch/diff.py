@@ -30,13 +30,20 @@ def parse_diff(diff_text: str, source_root=None) -> list:
     """Parse a unified diff and optionally recover complete files from source_root."""
     files = []
     path = None
+<<<<<<< HEAD
     body = {}
     added = set()
+=======
+    body: dict = {}
+    added: set = set()
+    hunks: list = []
+>>>>>>> a98c7ea925a8e1ad69e4fd586e02361270606e9f
     old_left = new_left = 0
     new_no = 0
     is_new_file = False
 
     def flush():
+<<<<<<< HEAD
         nonlocal path, body, added, is_new_file
 
         if path and body:
@@ -66,6 +73,14 @@ def parse_diff(diff_text: str, source_root=None) -> list:
             )
 
         path, body, added, is_new_file = None, {}, set(), False
+=======
+        nonlocal path, body, added, hunks
+        if path and body:
+            last = max(body)
+            text = "\n".join(body.get(i, "") for i in range(1, last + 1)) + "\n"
+            files.append(ChangedFile(path=path, new_text=text, added_lines=set(added), hunks=hunks))
+        path, body, added, hunks = None, {}, set(), []
+>>>>>>> a98c7ea925a8e1ad69e4fd586e02361270606e9f
 
     for raw in diff_text.splitlines():
         if old_left > 0 or new_left > 0:
@@ -73,7 +88,12 @@ def parse_diff(diff_text: str, source_root=None) -> list:
                 continue
 
             tag, content = raw[:1], raw[1:]
+<<<<<<< HEAD
 
+=======
+            if hunks:
+                hunks[-1].append((tag if tag in "+-" and tag else " ", new_no, content))
+>>>>>>> a98c7ea925a8e1ad69e4fd586e02361270606e9f
             if tag == "+":
                 body[new_no] = content
                 added.add(new_no)
@@ -107,6 +127,7 @@ def parse_diff(diff_text: str, source_root=None) -> list:
                 path = target[2:] if target.startswith("b/") else target
 
         else:
+<<<<<<< HEAD
             match = HUNK.match(raw)
 
             if match:
@@ -122,8 +143,24 @@ def parse_diff(diff_text: str, source_root=None) -> list:
                     else 1
                 )
 
+=======
+            m = HUNK.match(raw)
+            if m:
+                old_left = int(m.group(1)) if m.group(1) is not None else 1
+                new_no = int(m.group(2))
+                new_left = int(m.group(3)) if m.group(3) is not None else 1
+                hunks.append([])
+>>>>>>> a98c7ea925a8e1ad69e4fd586e02361270606e9f
     flush()
     return files
+
+
+def _open_php(text: str) -> str:
+    """A PHP diff usually starts below the `<?php` line, and without it PHP tools read the code as HTML.
+    Put `<?php` on line 1 (line numbers stay the same)."""
+    lines = text.split("\n")
+    lines[0] = "<?php " + lines[0] if lines[0].strip() else "<?php"
+    return "\n".join(lines)
 
 
 def write_workspace(files: list) -> Path:
@@ -137,6 +174,7 @@ def write_workspace(files: list) -> Path:
             continue
 
         target.parent.mkdir(parents=True, exist_ok=True)
+<<<<<<< HEAD
         target.write_text(
             file.new_text,
             encoding="utf-8",
@@ -144,3 +182,29 @@ def write_workspace(files: list) -> Path:
         )
 
     return root
+=======
+        text = f.new_text
+        if target.suffix.lower() == ".php" and "<?" not in text:
+            text = _open_php(text)
+        target.write_text(text, encoding="utf-8", newline="\n")
+    return root
+
+def change_blocks(hunk: list) -> list:
+    """Split a hunk into change blocks: (removed texts, added [(line, text)], line where the removal sits)."""
+    blocks, removed, added = [], [], []
+    anchor = None
+    for tag, no, text in hunk + [(" ", None, "")]:
+        if tag == "-":
+            if added:                                  # a new block starts after a run of additions
+                blocks.append((removed, added, anchor))
+                removed, added, anchor = [], [], None
+            removed.append(text)
+            anchor = no if anchor is None else anchor
+        elif tag == "+":
+            added.append((no, text))
+            anchor = no if anchor is None else anchor
+        elif removed or added:
+            blocks.append((removed, added, anchor))
+            removed, added, anchor = [], [], None
+    return blocks
+>>>>>>> a98c7ea925a8e1ad69e4fd586e02361270606e9f
