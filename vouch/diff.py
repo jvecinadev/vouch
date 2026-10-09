@@ -8,6 +8,18 @@ from .models import ChangedFile
 HUNK = re.compile(r"^@@ -\d+(?:,(\d+))? \+(\d+)(?:,(\d+))? @@")
 
 
+def is_diff(text: str) -> bool:
+    return any(line.startswith("+++ ") for line in text.splitlines())
+
+
+def code_to_diff(code: str, path: str) -> str:
+    """Wrap plain code as a git diff that adds it as a new file, so the normal pipeline can scan it."""
+    lines = code.splitlines()
+    body = "".join(f"+{line}\n" for line in lines)
+    return (f"diff --git a/{path} b/{path}\nnew file mode 100644\n--- /dev/null\n+++ b/{path}\n"
+            f"@@ -0,0 +1,{len(lines)} @@\n{body}")
+
+
 def parse_diff(diff_text: str) -> list:
     files: list = []
     path = None
@@ -60,6 +72,14 @@ def parse_diff(diff_text: str) -> list:
     return files
 
 
+def _open_php(text: str) -> str:
+    """A PHP diff usually starts below the `<?php` line, and without it PHP tools read the code as HTML.
+    Put `<?php` on line 1 (line numbers stay the same)."""
+    lines = text.split("\n")
+    lines[0] = "<?php " + lines[0] if lines[0].strip() else "<?php"
+    return "\n".join(lines)
+
+
 def write_workspace(files: list) -> Path:
     """Write changed files to a temp dir so scanners and `git apply` have real files."""
     root = Path(tempfile.mkdtemp(prefix="vouch-")).resolve()
@@ -68,5 +88,8 @@ def write_workspace(files: list) -> Path:
         if root not in target.parents:            # never write outside the workspace
             continue
         target.parent.mkdir(parents=True, exist_ok=True)
-        target.write_text(f.new_text, newline="\n")
+        text = f.new_text
+        if target.suffix.lower() == ".php" and "<?" not in text:
+            text = _open_php(text)
+        target.write_text(text, encoding="utf-8", newline="\n")
     return root
