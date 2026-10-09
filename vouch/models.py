@@ -15,9 +15,10 @@ class Badge(str, Enum):
 @dataclass
 class ChangedFile:
     path: str
-    new_text: str                                  # reconstructed new version of the file
-    added_lines: set = field(default_factory=set)  # line numbers added by the diff
-    hunks: list = field(default_factory=list)      # per hunk: [(tag "+"/"-"/" ", new line no, text)]
+    new_text: str
+    added_lines: set = field(default_factory=set)
+    complete: bool = True
+    hunks: list = field(default_factory=list)
 
 
 @dataclass

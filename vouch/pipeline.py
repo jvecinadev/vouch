@@ -18,7 +18,7 @@ from .scanners import SEV_ORDER, merge_findings, run_scanners
 from .triage import triage_finding
 
 
-def scan(diff_text: str, language: str = "auto"):
+def scan(diff_text: str, language: str = "auto", source_root=None):
     """`language` is only used when plain code (not a diff) is pasted: "auto" or e.g. "javascript"."""
     if config.USE_MOCK:
         yield from mock.scan()
@@ -36,7 +36,10 @@ def scan(diff_text: str, language: str = "auto"):
         name = f"pasted{EXTENSION[lang]}"
         yield "status", f"Plain code: scanning it as {NAMES[lang]} ({name})"
         diff_text = code_to_diff(diff_text, name)
-    files = [f for f in parse_diff(diff_text) if is_supported(f.path)]
+    files = [
+    f for f in parse_diff(diff_text, source_root=source_root)
+    if is_supported(f.path)
+    ]
     if not files:
         yield "error", f"No supported files found in this diff. Vouch reads: {supported_names()}."
         return
@@ -65,17 +68,39 @@ def scan(diff_text: str, language: str = "auto"):
                 f.badge = Badge.SKIPPED
                 yield "finding", f
             return
+        
+        complete_files = {
+            item.path: item.complete for item in files
+        }
+
         for i, f in enumerate(findings, 1):
-            text = (Path(workspace) / f.file).read_text(encoding="utf-8")
+            text = (Path(workspace) / f.file).read_text(
+                encoding="utf-8"
+            )
+
+            if not complete_files.get(f.file, False):
+                f.badge = Badge.SKIPPED
+                f.explanation = (
+                    "Fix skipped: this diff omits unchanged source lines, "
+                    "so Vouch cannot safely reconstruct the complete file "
+                    "or verify a patch. Provide the complete new file or "
+                    "scan with the full source file available."
+                )
+                yield "finding", f
+                continue
+
             yield "status", f"Triaging {i} of {len(findings)}"
             triage_finding(f, text)
+
             if f.verdict == "likely_false_positive":
                 f.badge = Badge.SKIPPED
                 yield "finding", f
                 continue
+
             yield "status", f"Fixing and verifying {i} of {len(findings)}"
             fix_with_retry(f, workspace, baseline)
             yield "finding", f
+
         yield "status", "Done"
     finally:
         shutil.rmtree(workspace, ignore_errors=True)
