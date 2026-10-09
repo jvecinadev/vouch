@@ -143,3 +143,63 @@ def test_ai_review_does_not_repeat_a_safeguard_finding(monkeypatch):
     monkeypatch.setattr(triage, "call_llm", lambda p: {"verdict": "true_positive", "explanation": "x"})
     monkeypatch.setattr(patch, "call_llm", _fake_fix("$allowed_roles))", "$allowed_roles, true))"))
     assert [f.tool for f in _scan(monkeypatch, IN_ARRAY, model=True)] == ["safeguard"]
+
+
+GO_TWO_FILES = """diff --git a/cache/store.go b/cache/store.go
+index 1234567..89abcdef 100644
+--- a/cache/store.go
++++ b/cache/store.go
+@@ -10,12 +10,10 @@ type SessionCache struct {
+ 
+ // Set stores user session data
+ func (c *SessionCache) Set(token string, userID int) {
+-\tc.mu.Lock()
+-\tdefer c.mu.Unlock()
+-\tc.data[token] = userID
++\t// Performance optimization: removed lock contention on map writes
++\tc.data[token] = userID
+ }
+
+diff --git a/client/client.go b/client/client.go
+index 1234567..89abcdef 100644
+--- a/client/client.go
++++ b/client/client.go
+@@ -10,12 +10,10 @@ import (
+ 
+ // FetchUserData makes an outgoing HTTP request and returns the body
+ func FetchUserData(url string) ([]byte, error) {
+ \tresp, err := http.Get(url)
+ \tif err != nil {
+ \t\treturn nil, err
+ \t}
+-\t// Ensure connection is returned to the pool
+-\tdefer resp.Body.Close()
+ \t
+-\treturn io.ReadAll(resp.Body)
++\t// Refactoring: removed defer since io.ReadAll already consumes the stream
++\treturn io.ReadAll(resp.Body)
+ }
+"""
+
+
+def test_wrong_hunk_counts_do_not_swallow_the_next_file():
+    files = parse_diff(GO_TWO_FILES)
+    assert [f.path for f in files] == ["cache/store.go", "client/client.go"]
+    assert "diff --git" not in files[0].new_text
+    assert files[1].added_lines == {18, 19}
+
+
+def test_removed_lock_and_close_are_flagged(monkeypatch):
+    assert [(f.file, f.line, f.rule_id) for f in _scan(monkeypatch, GO_TWO_FILES)] == [
+        ("cache/store.go", 14, "vouch-removed-lock"),
+        ("client/client.go", 18, "vouch-removed-close")]
+
+
+def test_lock_fix_verifies(monkeypatch):
+    monkeypatch.setattr(triage, "call_llm", lambda p: {"verdict": "true_positive", "explanation": "x"})
+    monkeypatch.setattr(patch, "call_llm", _fake_fix(
+        "\t// Performance optimization: removed lock contention on map writes\n",
+        "\tc.mu.Lock()\n\tdefer c.mu.Unlock()\n", "go"))
+    found = _scan(monkeypatch, GO_TWO_FILES, model=True)
+    lock = next(f for f in found if f.rule_id == "vouch-removed-lock")
+    assert lock.badge == Badge.VERIFIED, lock.verify_log

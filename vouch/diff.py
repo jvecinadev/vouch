@@ -38,6 +38,8 @@ def parse_diff(diff_text: str) -> list:
         path, body, added, hunks = None, {}, set(), []
 
     for raw in diff_text.splitlines():
+        if (old_left > 0 or new_left > 0) and (raw.startswith("diff --git ") or HUNK.match(raw)):
+            old_left = new_left = 0               # hand-edited diff with wrong @@ counts: a new file/hunk starts here
         if old_left > 0 or new_left > 0:          # inside a hunk: use the header counts
             if raw.startswith("\\"):
                 continue
