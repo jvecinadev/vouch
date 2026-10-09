@@ -5,7 +5,8 @@ import tempfile
 from dataclasses import dataclass
 from pathlib import Path
 
-from .languages import check_syntax_text, language_of
+from . import review, safeguards
+from .languages import check_syntax_text, count_syntax_errors, language_of
 from .scanners import run_scanners
 
 
@@ -57,11 +58,24 @@ def verify_patch(patch: str, finding, workspace, baseline: list) -> VerifyResult
     patched = None
     try:
         patched = apply_to_copy(patch, workspace)
+        lang = language_of(finding.file)
+        before = (Path(workspace) / finding.file).read_text(encoding="utf-8")
+        after = (patched / finding.file).read_text(encoding="utf-8")
         parses, err = check_syntax(patched / finding.file)
         if not parses:
+            # A diff often shows only part of a file (e.g. a method without its class), which never parses.
+            # Then the patch only has to add no new syntax errors.
+            old_errors = count_syntax_errors(before, lang)
+            parses = 0 < old_errors and count_syntax_errors(after, lang) <= old_errors
+        if not parses:
             return VerifyResult(applies=True, error=f"The patched code has a syntax error: {err}")
-        gone = check_finding_gone(patched, finding, baseline)
-        if not gone:
+        if finding.tool == review.TOOL:           # AI-found: no scanner rule exists to re-check it
+            return VerifyResult(applies=True, parses=True)
+        if finding.tool == safeguards.TOOL:
+            if not safeguards.restored(finding, before, after):
+                return VerifyResult(applies=True, parses=True,
+                                    error=f"The removed safeguard is still missing. Restore: {finding.code}")
+        elif not check_finding_gone(patched, finding, baseline):
             return VerifyResult(applies=True, parses=True,
                                 error=f"The scanner still reports {finding.rule_id} after your patch.")
         return VerifyResult(applies=True, parses=True, finding_gone=True)
