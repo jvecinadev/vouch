@@ -33,6 +33,7 @@ class Finding:
     # filled by triage.py
     verdict: str = ""         # "true_positive" | "likely_false_positive"
     explanation: str = ""
+    trace: str = ""          # short note on where the flagged value came from
     # filled by patch.py / verify.py
     patch: str = ""
     badge: Badge = Badge.SKIPPED

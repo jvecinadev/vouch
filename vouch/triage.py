@@ -1,6 +1,7 @@
 """OWNER: Dev C. Ask the model: real issue or false positive, and explain it."""
 from .context import context_window
 from .llm import call_llm
+from .trace import trace_finding
 import config
 
 TRIAGE_PROMPT = """You are a security code reviewer. A static scanner reported an issue.
@@ -13,14 +14,16 @@ Code around the finding:
 ```
 {snippet}
 ```
-
+{trace}
 Decide if this is a real vulnerability. Reply with JSON only:
 {{"verdict": "true_positive" or "likely_false_positive", "explanation": "2-3 plain sentences: what is wrong and how it could be exploited", "severity": "critical" or "high" or "medium" or "low"}}"""
 
 
 def triage_finding(finding, file_text: str):
     _, _, snippet = context_window(file_text, finding.line, config.CONTEXT_RADIUS)
-    prompt = TRIAGE_PROMPT.format(rule_id=finding.rule_id, cwe=finding.cwe or "no CWE",
+    finding.trace = trace_finding(finding, file_text)["note"]
+    prompt = TRIAGE_PROMPT.format(trace=("\n" + finding.trace + "\n") if finding.trace else "",
+                                  rule_id=finding.rule_id, cwe=finding.cwe or "no CWE",
                                   message=finding.message, file=finding.file,
                                   line=finding.line, snippet=snippet)
     try:
