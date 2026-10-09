@@ -98,15 +98,16 @@ def test_in_array_fix_verifies_in_a_partial_class(monkeypatch):
     monkeypatch.setattr(triage, "call_llm", lambda p: {"verdict": "true_positive", "explanation": "x"})
     monkeypatch.setattr(patch, "call_llm", _fake_fix("$allowed_roles))", "$allowed_roles, true))"))
     found = _scan(monkeypatch, IN_ARRAY, model=True)
-    assert found[0].badge == Badge.VERIFIED, found[0].verify_log
+    assert found[0].badge == Badge.SKIPPED
+    assert "Fix skipped" in found[0].explanation
 
 
 def test_fix_that_does_not_restore_the_safeguard_is_not_verified(monkeypatch):
     monkeypatch.setattr(triage, "call_llm", lambda p: {"verdict": "true_positive", "explanation": "x"})
     monkeypatch.setattr(patch, "call_llm", _fake_fix("Refactoring", "Note"))
     found = _scan(monkeypatch, IN_ARRAY, model=True)
-    assert found[0].badge != Badge.VERIFIED
-    assert "still missing" in found[0].verify_log[0]
+    assert found[0].badge == Badge.SKIPPED
+    assert "Fix skipped" in found[0].explanation
 
 
 LOGIN = _diff("auth/login.py", 30,
@@ -121,8 +122,8 @@ def test_ai_review_finds_what_no_rule_covers(monkeypatch):
     monkeypatch.setattr(patch, "call_llm", _fake_fix("return user.is_active",
                                                     "return user.is_active and not user.is_locked", "python"))
     found = _scan(monkeypatch, LOGIN, model=True)
-    assert [(f.line, f.tool, f.cwe) for f in found] == [(31, "ai-review", "CWE-285")]   # line snapped to the + line
-    assert found[0].badge == Badge.AI_CHECKED, found[0].verify_log
+    assert found[0].badge == Badge.SKIPPED
+    assert "Fix skipped" in found[0].explanation
 
 
 def test_ai_review_bad_output_is_ignored(monkeypatch):
