@@ -12,19 +12,13 @@ class Badge(str, Enum):
     AI_CHECKED = "ai_checked"    # AI-found issue: patch applies and parses, but no scanner rule can re-check it
 
 
-
 @dataclass
 class ChangedFile:
     path: str
-<<<<<<< HEAD
     new_text: str
     added_lines: set = field(default_factory=set)
     complete: bool = True
-=======
-    new_text: str                                  # reconstructed new version of the file
-    added_lines: set = field(default_factory=set)  # line numbers added by the diff
-    hunks: list = field(default_factory=list)      # per hunk: [(tag "+"/"-"/" ", new line no, text)]
->>>>>>> a98c7ea925a8e1ad69e4fd586e02361270606e9f
+    hunks: list = field(default_factory=list)
 
 
 @dataclass
