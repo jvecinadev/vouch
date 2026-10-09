@@ -11,11 +11,13 @@ class Badge(str, Enum):
     SKIPPED = "skipped"          # no fix attempted (false positive, or model unavailable)
 
 
+
 @dataclass
 class ChangedFile:
     path: str
-    new_text: str                                  # reconstructed new version of the file
-    added_lines: set = field(default_factory=set)  # line numbers added by the diff
+    new_text: str
+    added_lines: set = field(default_factory=set)
+    complete: bool = True
 
 
 @dataclass
