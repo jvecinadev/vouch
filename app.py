@@ -18,7 +18,11 @@ BADGES = {
     Badge.UNVERIFIED: ("Applies but unverified", "#d97706"),
     Badge.NEEDS_HUMAN: ("Needs human fix", "#dc2626"),
     Badge.SKIPPED: ("No fix attempted", "#6b7280"),
+    Badge.AI_CHECKED: ("AI fix: applies and parses, not scanner-verified", "#7c3aed"),
 }
+FOUND_BY = {"bandit": "Bandit", "semgrep": "Semgrep",
+            "safeguard": "Removed-safeguard check (the diff took out a safe pattern)",
+            "ai-review": "AI review of the diff (no scanner rule confirms this; check it yourself)"}
 SEVERITY = {"critical": "#7f1d1d", "high": "#dc2626", "medium": "#d97706", "low": "#2563eb"}
 CSS_FILE = Path(__file__).parent / "assets" / "style.css"
 DEMO_DIFF = Path(__file__).parent / "examples" / "demo_sqli.diff"
@@ -61,7 +65,8 @@ def render_card(f, n=1) -> str:
     return (f'<div class="vouch-card" style="border:1px solid #444;border-radius:8px;padding:14px;margin-bottom:12px">'
             f'{pill(f.severity.upper(), SEVERITY.get(f.severity, "#6b7280"))} '
             f'<b>{html.escape(f.title.title())}</b> {html.escape(f.cwe or "")}<br>'
-            f'<small>{html.escape(f.file)}, line {f.line}</small> &nbsp; {html.escape(verdict)}'
+            f'<small>{html.escape(f.file)}, line {f.line}</small> &nbsp; {html.escape(verdict)}<br>'
+            f'<small>Found by: {html.escape(FOUND_BY.get(f.tool, f.tool))}</small>'
             f'<p>{html.escape(f.explanation or f.message)}</p>{note}{patch}'
             f'<p>{pill(label, color)}{html.escape(retry)}</p>{retry_log(f)}</div>')
 

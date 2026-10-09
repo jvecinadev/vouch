@@ -7,5 +7,6 @@ OLLAMA_HOST = (os.getenv("VOUCH_OLLAMA_HOST") or os.getenv("OLLAMA_HOST")
 MAX_RETRIES = 2        
 CONTEXT_RADIUS = 10      
 MAX_FINDINGS = 10
+MAX_REVIEW_HUNKS = 20    # changed hunks the model reviews per scan
 USE_MOCK = os.getenv("VOUCH_MOCK") == "1"   
 RULES_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "rules")

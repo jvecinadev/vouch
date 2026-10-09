@@ -125,7 +125,7 @@ def _go_file(body):
 
 @needs_semgrep
 @pytest.mark.parametrize("diff, expected", [
-    (GO_TYPED_NIL, [(14, "vouch-go-typed-nil-error")]),
+    (GO_TYPED_NIL, [(14, "vouch-go-typed-nil-error"), (16, "vouch-removed-error-return")]),
     (_go_file("""
 func (s *Svc) Check() error {
 \tvar e *MyErr
