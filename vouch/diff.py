@@ -74,5 +74,5 @@ def write_workspace(files: list) -> Path:
         if root not in target.parents:            # never write outside the workspace
             continue
         target.parent.mkdir(parents=True, exist_ok=True)
-        target.write_text(f.new_text)
+        target.write_text(f.new_text, newline="\n")
     return root
