@@ -8,6 +8,7 @@ import html
 import json
 import re
 
+from vouch.languages import supported_names
 from vouch.models import Badge
 from vouch.sarif import export_sarif
 
@@ -22,7 +23,11 @@ VERIFY = {
     Badge.UNVERIFIED: ("warn", "Applies, unverified", "!"),
     Badge.NEEDS_HUMAN: ("danger", "Needs human fix", "!"),
     Badge.SKIPPED: ("neutral", "No fix attempted", "–"),
+    Badge.AI_CHECKED: ("warn", "AI fix, not scanner-verified", "AI"),
 }
+FOUND_BY = {"bandit": "Bandit", "semgrep": "Semgrep",
+            "safeguard": "Removed-safeguard check",
+            "ai-review": "AI review (no scanner rule confirms this)"}
 VERDICTS = {
     "true_positive": ("Likely real issue", "real"),
     "likely_false_positive": ("Likely false positive", "fp"),
@@ -82,13 +87,14 @@ def topbar(model: str, llm_ok: bool, reason: str = "", scanners: dict = None, mo
     return out
 
 
-def input_header(language: str = "Python") -> str:
+def input_header(language: str = "") -> str:
+    language = language or supported_names()
     return (
         '<div class="section-heading"><div><span class="eyebrow">Input</span>'
         '<h1>Review your changes</h1></div>'
         f'<span class="language-pill">{esc(language)}</span></div>'
-        '<p class="section-copy">Paste a unified git diff. Only changed lines are checked '
-        'by the scanner rules.</p>'
+        '<p class="section-copy">Paste a unified git diff or plain code. In a diff, only changed lines '
+        'are checked, and removed safeguards are flagged.</p>'
     )
 
 
@@ -201,6 +207,8 @@ def _hero_text(f) -> str:
         return "Passed on first attempt" if f.attempts <= 1 else f"Passed after attempt {f.attempts}"
     if f.badge == Badge.UNVERIFIED:
         return "Patch applies, a later check failed"
+    if f.badge == Badge.AI_CHECKED:
+        return "Patch applies and parses; no scanner rule can confirm the fix"
     if f.badge == Badge.NEEDS_HUMAN:
         return f"No valid patch after {f.attempts} attempt{'s' if f.attempts != 1 else ''}" if f.attempts else "No valid patch"
     return "Likely false positive" if f.verdict == "likely_false_positive" else "Model unavailable or not needed"
@@ -256,7 +264,7 @@ def finding_board(f, n: int = 1) -> str:
     explanation = (
         '<section class="explanation-tile v-panel bento-tile"><div class="tile-heading">'
         '<span class="tile-index">01</span><span class="content-label">Why it was flagged</span></div>'
-        f'<p>{why}</p><div class="confidence-row"><span>Scanner rule · {esc(f.tool)}</span>'
+        f'<p>{why}</p><div class="confidence-row"><span>Found by · {esc(FOUND_BY.get(f.tool, f.tool))}</span>'
         f'<strong>{esc(f.rule_id)}</strong></div></section>'
     )
     verification = (
@@ -267,7 +275,7 @@ def finding_board(f, n: int = 1) -> str:
         + ('<p class="retry-note">Earlier attempts failed and were corrected by the retry loop. See the log above.</p>'
            if f.badge == Badge.VERIFIED and f.attempts > 1 else
            '<p class="retry-note">Review this one manually before merging.</p>'
-           if f.badge in (Badge.NEEDS_HUMAN, Badge.UNVERIFIED) else "")
+           if f.badge in (Badge.NEEDS_HUMAN, Badge.UNVERIFIED, Badge.AI_CHECKED) else "")
         + '</aside>'
     )
 
