@@ -1,7 +1,7 @@
 import os
 
 MODEL = os.getenv("VOUCH_MODEL", "qwen2.5-coder:3b")
-OLLAMA_HOST = os.getenv("OLLAMA_HOST", "http://localhost:11434")
+OLLAMA_HOST = os.getenv("VOUCH_OLLAMA_HOST", "http://127.0.0.1:11434")
 MAX_RETRIES = 2        
 CONTEXT_RADIUS = 10      
 MAX_FINDINGS = 10      
