@@ -1,0 +1,8 @@
+rules:
+  - id: vouch-subprocess-shell-true
+    languages: [python]
+    severity: ERROR
+    message: subprocess call with shell=True can allow command injection.
+    pattern: subprocess.$FUNC(..., shell=True, ...)
+    metadata:
+      cwe: ["CWE-78: OS Command Injection"]
