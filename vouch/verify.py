@@ -22,16 +22,16 @@ class VerifyResult:
 
 
 def check_applies(patch: str, workspace) -> tuple:
-    proc = subprocess.run(["git", "apply", "--check", "-"], input=patch, cwd=str(workspace),
-                          capture_output=True, text=True)
-    return proc.returncode == 0, proc.stderr.strip()
+    proc = subprocess.run(["git", "apply", "--check", "-"], input=patch.encode(), cwd=str(workspace),
+                          capture_output=True)
+    return proc.returncode == 0, proc.stderr.decode(errors="replace").strip()
 
 
 def apply_to_copy(patch: str, workspace) -> Path:
     tmp = Path(tempfile.mkdtemp(prefix="vouch-patched-"))
     shutil.copytree(workspace, tmp, dirs_exist_ok=True)
-    subprocess.run(["git", "apply", "-"], input=patch, cwd=str(tmp),
-                   capture_output=True, text=True, check=True)
+    subprocess.run(["git", "apply", "-"], input=patch.encode(), cwd=str(tmp),
+                   capture_output=True, check=True)
     return tmp
 
 
@@ -69,7 +69,7 @@ def verify_patch(patch: str, finding, workspace, baseline: list) -> VerifyResult
                                 error=f"The scanner still reports {finding.rule_id} after your patch.")
         return VerifyResult(applies=True, parses=True, finding_gone=True)
     except subprocess.CalledProcessError as e:
-        return VerifyResult(error=f"The patch could not be applied: {e.stderr}")
+        return VerifyResult(error=f"The patch could not be applied: {(e.stderr or b'').decode(errors='replace')}")
     finally:
         if patched:
             shutil.rmtree(patched, ignore_errors=True)

@@ -1,10 +1,4 @@
-"""OWNER: Dev B. Parse a unified git diff into files and write them to a temp workspace.
 
-Note: a diff only contains the changed hunks, so the reconstructed file holds the changed
-lines plus their context at the right line numbers (gaps are blank lines). A diff that adds a
-whole new file reconstructs perfectly. For best results on edits, generate diffs with
-`git diff -U30` so more surrounding code is included.
-"""
 import re
 import tempfile
 from pathlib import Path
@@ -74,5 +68,5 @@ def write_workspace(files: list) -> Path:
         if root not in target.parents:            # never write outside the workspace
             continue
         target.parent.mkdir(parents=True, exist_ok=True)
-        target.write_text(f.new_text)
+        target.write_text(f.new_text, newline="\n")
     return root
