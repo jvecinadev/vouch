@@ -1,16 +1,13 @@
 """OWNER: Dev A. The single-page Gradio UI. Run: python app.py   (or VOUCH_MOCK=1 python app.py)"""
-import base64
-import html
 from pathlib import Path
 
 import gradio as gr
 
 import config
+from ui import components as ui
 from vouch.languages import EXTENSION, NAMES, supported_names
 from vouch.llm import llm_status
-from vouch.models import Badge
 from vouch.pipeline import scan
-from vouch.sarif import write_sarif
 from vouch.scanners import scanner_status
 
 BADGES = {
@@ -94,12 +91,15 @@ def status_banner() -> str:
 
 def run_scan(diff_text, language="auto"):
     findings, status = [], "Starting"
+    yield ui.render_results(findings, status, "running")
+    state = "running"
+    for event, payload in scan(diff_text):
     yield render_cards(findings), status, None
     for event, payload in scan(diff_text, language):
         if event == "status":
             status = payload
         elif event == "error":
-            status = f"Error: {payload}"
+            status, state = payload, "error"
         elif event == "finding":
             findings.append(payload)
         yield render_cards(findings), status, None
@@ -136,6 +136,6 @@ def build_ui():
 if __name__ == "__main__":
     css = CSS_FILE.read_text(encoding="utf-8") if CSS_FILE.exists() else ""
     try:
-        build_ui().launch(css=css)       # Gradio 6+
+        build_ui().launch(css=css)       
     except TypeError:
-        build_ui().launch()              # older Gradio: css would have to go in gr.Blocks(css=...)
+        build_ui(css).launch()         
