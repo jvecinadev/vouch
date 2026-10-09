@@ -72,6 +72,14 @@ def parse_diff(diff_text: str) -> list:
     return files
 
 
+def _open_php(text: str) -> str:
+    """A PHP diff usually starts below the `<?php` line, and without it PHP tools read the code as HTML.
+    Put `<?php` on line 1 (line numbers stay the same)."""
+    lines = text.split("\n")
+    lines[0] = "<?php " + lines[0] if lines[0].strip() else "<?php"
+    return "\n".join(lines)
+
+
 def write_workspace(files: list) -> Path:
     """Write changed files to a temp dir so scanners and `git apply` have real files."""
     root = Path(tempfile.mkdtemp(prefix="vouch-")).resolve()
@@ -80,5 +88,8 @@ def write_workspace(files: list) -> Path:
         if root not in target.parents:            # never write outside the workspace
             continue
         target.parent.mkdir(parents=True, exist_ok=True)
-        target.write_text(f.new_text, encoding="utf-8", newline="\n")
+        text = f.new_text
+        if target.suffix.lower() == ".php" and "<?" not in text:
+            text = _open_php(text)
+        target.write_text(text, encoding="utf-8", newline="\n")
     return root
