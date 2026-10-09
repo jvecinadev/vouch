@@ -97,3 +97,76 @@ def test_partial_php_fix_verifies(monkeypatch):
     found = [p for e, p in pipeline.scan(PHP_HASH) if e == "finding"]
     assert found and found[0].badge.name == "VERIFIED", found[0].verify_log
     assert "<?php" not in found[0].patch
+
+
+GO_TYPED_NIL = """diff --git a/handler/user.go b/handler/user.go
+index 1234567..89abcdef 100644
+--- a/handler/user.go
++++ b/handler/user.go
+@@ -10,8 +10,8 @@ type CustomError struct {
+ // GetStatus checks state and returns an error interface
+ func GetStatus(success bool) error {
+ \tif success {
+-\t\treturn nil
++\t\tvar err *CustomError = nil
++\t\treturn err // Refactored: returning a typed nil pointer
+ \t}
+-\treturn errors.New("failed")
++\treturn nil
+ }
+"""
+
+
+def _go_file(body):
+    lines = body.strip("\n").splitlines()
+    return ("diff --git a/x.go b/x.go\nnew file mode 100644\n--- /dev/null\n+++ b/x.go\n"
+            f"@@ -0,0 +1,{len(lines)} @@\n" + "".join(f"+{l}\n" for l in lines))
+
+
+@needs_semgrep
+@pytest.mark.parametrize("diff, expected", [
+    (GO_TYPED_NIL, [(14, "vouch-go-typed-nil-error")]),
+    (_go_file("""
+func (s *Svc) Check() error {
+\tvar e *MyErr
+\treturn e
+}"""), [(3, "vouch-go-typed-nil-error")]),
+    (_go_file("""
+func Load() (int, error) {
+\tvar e *MyErr = nil
+\treturn 0, e
+}"""), [(3, "vouch-go-typed-nil-error")]),
+    (_go_file("""
+func Ok() error {
+\tvar e *MyErr
+\te = &MyErr{}
+\treturn e
+}"""), []),
+    (_go_file("""
+func Ok() error {
+\treturn nil
+}"""), []),
+    (_go_file("""
+func Ok() error {
+\tvar e *MyErr = nil
+\te = &MyErr{}
+\treturn e
+}"""), []),
+])
+def test_go_typed_nil_error(monkeypatch, diff, expected):
+    monkeypatch.setattr(pipeline, "llm_status", lambda: {"ok": False, "reason": "test"})
+    assert _findings(diff) == expected
+
+
+@needs_semgrep
+def test_go_typed_nil_fix_verifies(monkeypatch):
+    def fake_patch_llm(prompt):
+        code = re.search(r"```go\n(.*?)\n```", prompt, re.S).group(1)
+        code = code.replace("\t\tvar err *CustomError = nil\n", "")
+        code = code.replace("return err // Refactored: returning a typed nil pointer", "return nil")
+        return {"fixed_code": code}
+    monkeypatch.setattr(pipeline, "llm_status", lambda: {"ok": True, "reason": ""})
+    monkeypatch.setattr(triage, "call_llm", lambda p: {"verdict": "true_positive", "explanation": "x"})
+    monkeypatch.setattr(patch, "call_llm", fake_patch_llm)
+    found = [p for e, p in pipeline.scan(GO_TYPED_NIL) if e == "finding"]
+    assert found and found[0].badge.name == "VERIFIED", found[0].verify_log
