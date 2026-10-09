@@ -21,7 +21,7 @@ Code (lines {start}-{end} of {file}):
 ```
 {snippet}
 ```
-{feedback}
+{trace}{feedback}
 Rewrite this code so the vulnerability is fixed. Keep everything else identical (same indentation, names, and behavior). Do not add explanations.
 Reply with JSON only: {{"fixed_code": "<the full corrected code for the lines above>"}}"""
 
@@ -36,7 +36,8 @@ def generate_patch(finding, file_text: str, feedback: str = "") -> str:
     fb = f"\nYour previous attempt failed: {feedback}\nFix that problem.\n" if feedback else ""
     prompt = PATCH_PROMPT.format(title=finding.title, cwe=finding.cwe or "no CWE", line=finding.line,
                                  message=finding.message, start=start, end=end,
-                                 file=finding.file, snippet=snippet, feedback=fb)
+                                 file=finding.file, snippet=snippet, feedback=fb,
+                                 trace=(finding.trace + "\n") if finding.trace else "")
     fixed = str(call_llm(prompt).get("fixed_code", "")).rstrip("\n")
     lines = file_text.splitlines()
     new_lines = lines[:start - 1] + fixed.splitlines() + lines[end:]
