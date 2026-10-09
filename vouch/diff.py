@@ -25,22 +25,25 @@ def parse_diff(diff_text: str) -> list:
     path = None
     body: dict = {}
     added: set = set()
+    hunks: list = []
     old_left = new_left = 0
     new_no = 0
 
     def flush():
-        nonlocal path, body, added
+        nonlocal path, body, added, hunks
         if path and body:
             last = max(body)
             text = "\n".join(body.get(i, "") for i in range(1, last + 1)) + "\n"
-            files.append(ChangedFile(path=path, new_text=text, added_lines=set(added)))
-        path, body, added = None, {}, set()
+            files.append(ChangedFile(path=path, new_text=text, added_lines=set(added), hunks=hunks))
+        path, body, added, hunks = None, {}, set(), []
 
     for raw in diff_text.splitlines():
         if old_left > 0 or new_left > 0:          # inside a hunk: use the header counts
             if raw.startswith("\\"):
                 continue
             tag, content = raw[:1], raw[1:]
+            if hunks:
+                hunks[-1].append((tag if tag in "+-" and tag else " ", new_no, content))
             if tag == "+":
                 body[new_no] = content
                 added.add(new_no)
@@ -68,6 +71,7 @@ def parse_diff(diff_text: str) -> list:
                 old_left = int(m.group(1)) if m.group(1) is not None else 1
                 new_no = int(m.group(2))
                 new_left = int(m.group(3)) if m.group(3) is not None else 1
+                hunks.append([])
     flush()
     return files
 
@@ -93,3 +97,22 @@ def write_workspace(files: list) -> Path:
             text = _open_php(text)
         target.write_text(text, encoding="utf-8", newline="\n")
     return root
+
+def change_blocks(hunk: list) -> list:
+    """Split a hunk into change blocks: (removed texts, added [(line, text)], line where the removal sits)."""
+    blocks, removed, added = [], [], []
+    anchor = None
+    for tag, no, text in hunk + [(" ", None, "")]:
+        if tag == "-":
+            if added:                                  # a new block starts after a run of additions
+                blocks.append((removed, added, anchor))
+                removed, added, anchor = [], [], None
+            removed.append(text)
+            anchor = no if anchor is None else anchor
+        elif tag == "+":
+            added.append((no, text))
+            anchor = no if anchor is None else anchor
+        elif removed or added:
+            blocks.append((removed, added, anchor))
+            removed, added, anchor = [], [], None
+    return blocks

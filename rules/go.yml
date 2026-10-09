@@ -50,3 +50,57 @@ rules:
       - metavariable-regex:
           metavariable: $V
           regex: ^"?[^"]{4,}
+
+  - id: vouch-go-typed-nil-error
+    languages: [go]
+    severity: ERROR
+    message: >-
+      A typed nil pointer is returned as an error. The caller receives a non-nil error interface,
+      so `if err != nil` is true even on success and error handling breaks. Return a plain nil instead.
+    metadata:
+      cwe: ["CWE-754: Improper Check for Unusual or Exceptional Conditions"]
+    pattern-either:
+      - patterns:
+          - pattern-inside: |
+              func $F(...) error { ... }
+          - patterns:
+              - pattern-either:
+                  - pattern-inside: |
+                      var $E *$T = nil
+                      ...
+                  - pattern-inside: |
+                      var $E *$T
+                      ...
+              - pattern-not-inside: |
+                  var $E *$T
+                  ...
+                  $E = $V
+                  ...
+              - pattern-not-inside: |
+                  var $E *$T = nil
+                  ...
+                  $E = $V
+                  ...
+          - pattern: return $E
+      - patterns:
+          - pattern-inside: |
+              func $F(...) ($R, error) { ... }
+          - patterns:
+              - pattern-either:
+                  - pattern-inside: |
+                      var $E *$T = nil
+                      ...
+                  - pattern-inside: |
+                      var $E *$T
+                      ...
+              - pattern-not-inside: |
+                  var $E *$T
+                  ...
+                  $E = $V
+                  ...
+              - pattern-not-inside: |
+                  var $E *$T = nil
+                  ...
+                  $E = $V
+                  ...
+          - pattern: return $X, $E

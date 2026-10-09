@@ -10,15 +10,83 @@ from vouch.llm import llm_status
 from vouch.pipeline import scan
 from vouch.scanners import scanner_status
 
+BADGES = {
+    Badge.VERIFIED: ("Fix verified", "#16a34a"),
+    Badge.UNVERIFIED: ("Applies but unverified", "#d97706"),
+    Badge.NEEDS_HUMAN: ("Needs human fix", "#dc2626"),
+    Badge.SKIPPED: ("No fix attempted", "#6b7280"),
+    Badge.AI_CHECKED: ("AI fix: applies and parses, not scanner-verified", "#7c3aed"),
+}
+FOUND_BY = {"bandit": "Bandit", "semgrep": "Semgrep",
+            "safeguard": "Removed-safeguard check (the diff took out a safe pattern)",
+            "ai-review": "AI review of the diff (no scanner rule confirms this; check it yourself)"}
+SEVERITY = {"critical": "#7f1d1d", "high": "#dc2626", "medium": "#d97706", "low": "#2563eb"}
 CSS_FILE = Path(__file__).parent / "assets" / "style.css"
 DEMO_DIFF = Path(__file__).parent / "examples" / "demo_sqli.diff"
 DEMO_JS_DIFF = Path(__file__).parent / "examples" / "demo_js.diff"
 
 
-def topbar_now() -> str:
-    """Re-evaluated on every page load and on Re-check."""
-    llm = llm_status()
-    return ui.topbar(config.MODEL, llm["ok"], llm.get("reason", ""), scanner_status(), config.USE_MOCK)
+def pill(text, color):
+    return (f'<span style="background:{color};color:#fff;padding:2px 10px;border-radius:12px;'
+            f'font-size:12px;font-weight:600">{html.escape(text)}</span>')
+
+
+def patch_buttons(f, n) -> str:
+    """Copy button + .patch download link (a data: URL, so no server route is needed)."""
+    b64 = base64.b64encode(f.patch.encode()).decode()
+    name = f"vouch-fix-{n}.patch"
+    return (f'<pre style="overflow-x:auto">{html.escape(f.patch)}</pre>'
+            f'<button onclick="navigator.clipboard.writeText(this.dataset.patch)" '
+            f'data-patch="{html.escape(f.patch, quote=True)}">Copy patch</button> '
+            f'<a href="data:text/plain;base64,{b64}" download="{name}">'
+            f'<button type="button">Download .patch</button></a>')
+
+
+def retry_log(f) -> str:
+    """Show every verification attempt, so a failed-then-fixed patch is visible on the card."""
+    if not f.verify_log:
+        return ""
+    items = "".join(f"<li>{html.escape(line)}</li>" for line in f.verify_log)
+    return f'<details open><summary><small>Verification log</small></summary><ul>{items}</ul></details>'
+
+
+def render_card(f, n=1) -> str:
+    label, color = BADGES[f.badge]
+    retry = f" (fixed on attempt {f.attempts})" if f.badge == Badge.VERIFIED and f.attempts > 1 else ""
+    verdict = {"true_positive": "Likely real issue",
+               "likely_false_positive": "Likely false positive"}.get(f.verdict, "")
+    patch = patch_buttons(f, n) if f.patch else ""
+    note = ""
+    if f.badge == Badge.SKIPPED and not f.verdict:
+        note = "<p><small><i>Scanner-only result: the local model was unavailable, so no explanation or fix was generated.</i></small></p>"
+    return (f'<div class="vouch-card" style="border:1px solid #444;border-radius:8px;padding:14px;margin-bottom:12px">'
+            f'{pill(f.severity.upper(), SEVERITY.get(f.severity, "#6b7280"))} '
+            f'<b>{html.escape(f.title.title())}</b> {html.escape(f.cwe or "")}<br>'
+            f'<small>{html.escape(f.file)}, line {f.line}</small> &nbsp; {html.escape(verdict)}<br>'
+            f'<small>Found by: {html.escape(FOUND_BY.get(f.tool, f.tool))}</small>'
+            f'<p>{html.escape(f.explanation or f.message)}</p>{note}{patch}'
+            f'<p>{pill(label, color)}{html.escape(retry)}</p>{retry_log(f)}</div>')
+
+
+def render_cards(findings) -> str:
+    return "".join(render_card(f, i) for i, f in enumerate(findings, 1)) or "<i>No findings yet.</i>"
+
+
+def status_banner() -> str:
+    llm, tools = llm_status(), scanner_status()
+    lines = []
+    if config.USE_MOCK:
+        lines.append("MOCK MODE: showing fake data")
+    if llm["ok"]:
+        lines.append(f"Model: {config.MODEL} (running locally)")
+    else:
+        lines.append(f"**Scanner-only mode.** Model {config.MODEL} unavailable: {llm['reason']}")
+    lines.append("Scanners: " + ", ".join(f"{k} {'ok' if v else 'missing'}" for k, v in tools.items()))
+    text = " | ".join(lines)
+    if not llm["ok"] and not config.USE_MOCK:
+        text += ("\n\n*Fix:* start Ollama (`ollama serve`) and run `ollama pull "
+                 f"{config.MODEL}`, then click **Re-check**. Findings still work without the model.")
+    return text
 
 
 def run_scan(diff_text, language="auto"):
