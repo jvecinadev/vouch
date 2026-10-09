@@ -1,0 +1,59 @@
+rules:
+  - id: vouch-js-sql-injection
+    languages: [javascript, typescript]
+    severity: ERROR
+    message: SQL query built by joining strings can allow SQL injection. Use a parameterized query.
+    metadata:
+      cwe: ["CWE-89: SQL Injection"]
+    pattern-either:
+      - patterns:
+          - pattern: '"$SQL" + $X'
+          - metavariable-regex:
+              metavariable: $SQL
+              regex: (?i)^["'`]?\s*(select|insert|update|delete)\s
+      - pattern-regex: (?i)`\s*(select|insert|update|delete)\s[^`]*\$\{
+
+  - id: vouch-js-command-injection
+    languages: [javascript, typescript]
+    severity: ERROR
+    message: Shell command built from a variable can allow command injection. Use execFile/spawn with an argument list.
+    metadata:
+      cwe: ["CWE-78: OS Command Injection"]
+    pattern-either:
+      - patterns:
+          - pattern-either:
+              - pattern: $CP.$F("$S" + $X, ...)
+              - pattern: $F("$S" + $X, ...)
+          - metavariable-regex:
+              metavariable: $F
+              regex: ^(exec|execSync)$
+      - pattern-regex: \b(exec|execSync)\(\s*`[^`]*\$\{
+
+  - id: vouch-js-eval
+    languages: [javascript, typescript]
+    severity: ERROR
+    message: eval() on a non-constant value can run attacker-controlled code.
+    metadata:
+      cwe: ["CWE-95: Eval Injection"]
+    patterns:
+      - pattern: eval($X)
+      - pattern-not: eval("...")
+
+  - id: vouch-js-hardcoded-secret
+    options:
+      constant_propagation: false
+    languages: [javascript, typescript]
+    severity: WARNING
+    message: A secret is written directly in the source code. Read it from an environment variable (process.env).
+    metadata:
+      cwe: ["CWE-798: Use of Hard-coded Credentials"]
+    patterns:
+      - pattern-either:
+          - pattern: $K = "$V"
+          - pattern: '{..., $K: "$V", ...}'
+      - metavariable-regex:
+          metavariable: $K
+          regex: (?i).*(password|passwd|pwd|secret|api_?key|token).*
+      - metavariable-regex:
+          metavariable: $V
+          regex: ^["'`]?[^"'`]{4,}

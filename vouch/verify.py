@@ -1,11 +1,11 @@
 """OWNER: Dev B. The three checks that decide whether Vouch will stand behind a patch."""
-import ast
 import shutil
 import subprocess
 import tempfile
 from dataclasses import dataclass
 from pathlib import Path
 
+from .languages import check_syntax_text, language_of
 from .scanners import run_scanners
 
 
@@ -36,11 +36,8 @@ def apply_to_copy(patch: str, workspace) -> Path:
 
 
 def check_syntax(file_path) -> tuple:
-    try:
-        ast.parse(Path(file_path).read_text())
-        return True, ""
-    except SyntaxError as e:
-        return False, f"{e.msg} (line {e.lineno})"
+    path = Path(file_path)
+    return check_syntax_text(path.read_text(encoding="utf-8"), language_of(path))
 
 
 def check_finding_gone(patched_dir, finding, baseline: list) -> bool:

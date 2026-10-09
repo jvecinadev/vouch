@@ -8,6 +8,8 @@ No LLM here: plain `ast`. Origins:
 """
 import ast
 
+from .languages import language_of
+
 # What "fixed" means depends on the kind of warning.
 INJECTION = {"B608", "B602", "B604", "B605", "B606", "B607", "vouch-subprocess-shell-true"}
 SECRET = {"B105", "B106", "B107"}
@@ -66,6 +68,8 @@ def _origin(name, scope, tree, line, depth=0):
 
 def trace_finding(finding, file_text: str) -> dict:
     """Return {"note": str, "lean": "real" | "false_alarm" | None}."""
+    if language_of(finding.file) != "python":      # the tracer only understands Python
+        return {"note": "", "lean": None}
     try:
         tree = ast.parse(file_text)
     except SyntaxError:

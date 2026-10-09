@@ -6,6 +6,7 @@ from pathlib import Path
 import gradio as gr
 
 import config
+from vouch.languages import EXTENSION, NAMES, supported_names
 from vouch.llm import llm_status
 from vouch.models import Badge
 from vouch.pipeline import scan
@@ -21,6 +22,7 @@ BADGES = {
 SEVERITY = {"critical": "#7f1d1d", "high": "#dc2626", "medium": "#d97706", "low": "#2563eb"}
 CSS_FILE = Path(__file__).parent / "assets" / "style.css"
 DEMO_DIFF = Path(__file__).parent / "examples" / "demo_sqli.diff"
+DEMO_JS_DIFF = Path(__file__).parent / "examples" / "demo_js.diff"
 
 
 def pill(text, color):
@@ -85,10 +87,10 @@ def status_banner() -> str:
     return text
 
 
-def run_scan(diff_text):
+def run_scan(diff_text, language="auto"):
     findings, status = [], "Starting"
     yield render_cards(findings), status, None
-    for event, payload in scan(diff_text):
+    for event, payload in scan(diff_text, language):
         if event == "status":
             status = payload
         elif event == "error":
@@ -101,27 +103,33 @@ def run_scan(diff_text):
 
 def build_ui():
     with gr.Blocks(title="Vouch") as demo:
-        gr.Markdown("# Vouch\nLocal security fixes that are verified before you see them.")
+        gr.Markdown("# Vouch\nLocal security fixes that are verified before you see them.\n\n"
+                    f"Reads: {supported_names()}")
         banner = gr.Markdown(status_banner)          # a function: re-evaluated on every page load
         recheck = gr.Button("Re-check Ollama", size="sm")
         with gr.Row():
             with gr.Column():
-                diff_box = gr.Textbox(label="Paste a git diff", lines=18)
+                diff_box = gr.Textbox(label="Paste a git diff or plain code", lines=18)
+                language = gr.Dropdown(
+                    [("Auto-detect", "auto")] + [(NAMES[k], k) for k in EXTENSION if k != "tsx"],
+                    value="auto", label="Language (only used for plain code; a diff uses its file names)")
                 with gr.Row():
                     scan_btn = gr.Button("Scan", variant="primary")
-                    demo_btn = gr.Button("Load demo diff")
+                    demo_btn = gr.Button("Load Python demo")
+                    demo_js_btn = gr.Button("Load JavaScript demo")
             with gr.Column():
                 status = gr.Markdown("Ready.")
                 cards = gr.HTML(render_cards([]))
                 sarif = gr.File(label="Download SARIF")
         recheck.click(status_banner, outputs=banner)
-        demo_btn.click(lambda: DEMO_DIFF.read_text(), outputs=diff_box)
-        scan_btn.click(run_scan, inputs=diff_box, outputs=[cards, status, sarif])
+        demo_btn.click(lambda: DEMO_DIFF.read_text(encoding="utf-8"), outputs=diff_box)
+        demo_js_btn.click(lambda: DEMO_JS_DIFF.read_text(encoding="utf-8"), outputs=diff_box)
+        scan_btn.click(run_scan, inputs=[diff_box, language], outputs=[cards, status, sarif])
     return demo
 
 
 if __name__ == "__main__":
-    css = CSS_FILE.read_text() if CSS_FILE.exists() else ""
+    css = CSS_FILE.read_text(encoding="utf-8") if CSS_FILE.exists() else ""
     try:
         build_ui().launch(css=css)       # Gradio 6+
     except TypeError:

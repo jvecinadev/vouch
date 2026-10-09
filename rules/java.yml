@@ -1,0 +1,52 @@
+rules:
+  - id: vouch-java-sql-injection
+    languages: [java]
+    severity: ERROR
+    message: SQL query built by joining strings can allow SQL injection. Use a PreparedStatement with ? placeholders.
+    metadata:
+      cwe: ["CWE-89: SQL Injection"]
+    pattern-either:
+      - patterns:
+          - pattern: '"$SQL" + $X'
+          - metavariable-regex:
+              metavariable: $SQL
+              regex: (?i)^"?\s*(select|insert|update|delete)\s
+      - patterns:
+          - pattern: String.format("$SQL", ...)
+          - metavariable-regex:
+              metavariable: $SQL
+              regex: (?i)^"?\s*(select|insert|update|delete)\s.*%s
+
+  - id: vouch-java-command-injection
+    languages: [java]
+    severity: ERROR
+    message: Command built from a variable can allow command injection. Pass a fixed program and an argument array.
+    metadata:
+      cwe: ["CWE-78: OS Command Injection"]
+    patterns:
+      - pattern-either:
+          - pattern: Runtime.getRuntime().exec($CMD, ...)
+          - pattern: (Runtime $R).exec($CMD, ...)
+          - pattern: new ProcessBuilder("$SH", "-c", $CMD, ...)
+      - pattern-not: Runtime.getRuntime().exec("...", ...)
+      - pattern-not: (Runtime $R).exec("...", ...)
+      - pattern-not: new ProcessBuilder("$SH", "-c", "...", ...)
+
+  - id: vouch-java-hardcoded-secret
+    options:
+      constant_propagation: false
+    languages: [java]
+    severity: WARNING
+    message: A secret is written directly in the source code. Read it from System.getenv() instead.
+    metadata:
+      cwe: ["CWE-798: Use of Hard-coded Credentials"]
+    patterns:
+      - pattern-either:
+          - pattern: $T $K = "$V";
+          - pattern: $K = "$V";
+      - metavariable-regex:
+          metavariable: $K
+          regex: (?i).*(password|passwd|pwd|secret|api_?key|token).*
+      - metavariable-regex:
+          metavariable: $V
+          regex: ^"?[^"]{4,}

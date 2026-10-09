@@ -8,6 +8,7 @@ from pathlib import Path
 
 import config
 from .context import context_window
+from .languages import NAMES, language_of
 from .llm import call_llm
 from .models import Badge
 from .verify import verify_patch
@@ -17,12 +18,12 @@ PATCH_PROMPT = """You fix security vulnerabilities with the smallest possible ch
 Issue: {title} ({cwe}) at line {line}
 Scanner message: {message}
 
-Code (lines {start}-{end} of {file}):
-```
+Code (lines {start}-{end} of {file}, written in {language}):
+```{fence}
 {snippet}
 ```
 {trace}{feedback}
-Rewrite this code so the vulnerability is fixed. Keep everything else identical (same indentation, names, and behavior). Do not add explanations.
+Rewrite this code so the vulnerability is fixed. Keep everything else identical (same language, indentation, names, and behavior). Do not add explanations.
 Reply with JSON only: {{"fixed_code": "<the full corrected code for the lines above>"}}"""
 
 
@@ -34,7 +35,9 @@ def make_diff(path: str, old: str, new: str) -> str:
 def generate_patch(finding, file_text: str, feedback: str = "") -> str:
     start, end, snippet = context_window(file_text, finding.line, config.CONTEXT_RADIUS)
     fb = f"\nYour previous attempt failed: {feedback}\nFix that problem.\n" if feedback else ""
-    prompt = PATCH_PROMPT.format(title=finding.title, cwe=finding.cwe or "no CWE", line=finding.line,
+    lang = language_of(finding.file)
+    prompt = PATCH_PROMPT.format(language=NAMES.get(lang, "unknown"), fence=lang or "",
+                                 title=finding.title, cwe=finding.cwe or "no CWE", line=finding.line,
                                  message=finding.message, start=start, end=end,
                                  file=finding.file, snippet=snippet, feedback=fb,
                                  trace=(finding.trace + "\n") if finding.trace else "")
@@ -47,7 +50,7 @@ def generate_patch(finding, file_text: str, feedback: str = "") -> str:
 def fix_with_retry(finding, workspace, baseline: list, max_retries: int = None):
     """Generate -> verify -> retry with the error. Sets finding.patch / badge / attempts."""
     max_retries = config.MAX_RETRIES if max_retries is None else max_retries
-    file_text = (Path(workspace) / finding.file).read_text()
+    file_text = (Path(workspace) / finding.file).read_text(encoding="utf-8")
     feedback, last_applies = "", False
     for attempt in range(max_retries + 1):
         finding.attempts = attempt + 1

@@ -1,0 +1,16 @@
+const db = require("../db");
+const { exec } = require("child_process");
+ 
+// FAKE CREDENTIAL FOR DEMO ONLY. This file is intentionally insecure.
+const API_KEY = "demo-key-123456";
+ 
+function login(email) {
+  const query = "SELECT * FROM users WHERE email = '" + email + "'";
+  return db.query(query);
+}
+ 
+function ping(host) {
+  return exec("ping -c 1 " + host);
+}
+ 
+module.exports = { login, ping, API_KEY };
