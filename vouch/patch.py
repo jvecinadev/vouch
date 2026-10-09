@@ -5,7 +5,8 @@ Small models often write broken diff headers; this keeps patches applying cleanl
 """
 import difflib
 from pathlib import Path
-
+import math
+from urllib import response
 import config
 from .context import context_window
 from .llm import call_llm
@@ -26,9 +27,65 @@ Rewrite this code so the vulnerability is fixed. Keep everything else identical 
 Reply with JSON only: {{"fixed_code": "<the full corrected code for the lines above>"}}"""
 
 
+import math
+
+class PatchGenerationError(ValueError):
+    """Raised when the model response is unsafe to turn into a patch."""        
+
+def _validate_fixed_code(response, original_snippet: str) -> str:
+    """Reject malformed or suspiciously destructive model responses."""
+    if not isinstance(response, dict):
+        raise PatchGenerationError("The model response was not a JSON object.")
+
+    fixed = response.get("fixed_code")
+    if not isinstance(fixed, str):
+        raise PatchGenerationError(
+            "The model response must contain a string named 'fixed_code'."
+        )
+
+    fixed = fixed.strip("\r\n")
+    if not fixed.strip():
+        raise PatchGenerationError(
+            "The model returned empty code; refusing to generate a deletion patch."
+        )
+
+    original_lines = original_snippet.splitlines()
+    fixed_lines = fixed.splitlines()
+
+    if len(original_lines) >= 8:
+        original_nonblank = sum(bool(line.strip()) for line in original_lines)
+        fixed_nonblank = sum(bool(line.strip()) for line in fixed_lines)
+
+        if original_nonblank >= 4 and fixed_nonblank < max(
+            2, math.ceil(original_nonblank * 0.25)
+        ):
+            raise PatchGenerationError(
+                "The model response removes most of the original code; refusing the patch."
+            )
+
+        similarity = difflib.SequenceMatcher(
+            None,
+            "\n".join(line.rstrip() for line in original_lines),
+            "\n".join(line.rstrip() for line in fixed_lines),
+        ).ratio()
+
+        if similarity < 0.25:
+            raise PatchGenerationError(
+                "The model response differs too much from the original snippet; refusing the patch."
+            )
+
+    return fixed
+
 def make_diff(path: str, old: str, new: str) -> str:
-    return "".join(difflib.unified_diff(old.splitlines(True), new.splitlines(True),
-                                        f"a/{path}", f"b/{path}"))
+    path = str(path).replace("\\", "/")
+    return "".join(
+        difflib.unified_diff(
+            old.splitlines(True),
+            new.splitlines(True),
+            fromfile=f"a/{path}",
+            tofile=f"b/{path}"
+        )
+    )
 
 
 def generate_patch(finding, file_text: str, feedback: str = "") -> str:
@@ -38,7 +95,8 @@ def generate_patch(finding, file_text: str, feedback: str = "") -> str:
                                  message=finding.message, start=start, end=end,
                                  file=finding.file, snippet=snippet, feedback=fb,
                                  trace=(finding.trace + "\n") if finding.trace else "")
-    fixed = str(call_llm(prompt).get("fixed_code", "")).rstrip("\n")
+    response = call_llm(prompt)
+    fixed = _validate_fixed_code(response, snippet)
     lines = file_text.splitlines()
     new_lines = lines[:start - 1] + fixed.splitlines() + lines[end:]
     return make_diff(finding.file, file_text, "\n".join(new_lines) + "\n")

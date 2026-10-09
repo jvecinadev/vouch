@@ -71,4 +71,5 @@ def test_fix_loop_verifies_with_fake_model(monkeypatch):
         "    query = \"SELECT * FROM users WHERE email = ?\"\n    cursor.execute(query, (email,))")
     monkeypatch.setattr(patch_mod, "call_llm", lambda prompt: {"fixed_code": fixed})
     patch_mod.fix_with_retry(finding, root, baseline)
+    print("\nVerification log:", finding.verify_log)
     assert finding.badge == Badge.VERIFIED
