@@ -1,0 +1,1350 @@
+.vouch-app * {
+    box-sizing: border-box;
+}
+
+.vouch-app {
+    color-scheme: light;
+    --page: #d8d8d4;
+    --panel: #f7f7f3;
+    --white: #ffffff;
+    --black: #030304;
+    --brown-gray: #6d6158;
+    --muted: #958b83;
+    --silver: #c0c0c0;
+    --orange: #ed3702;
+    --dark-orange: #b62c03;
+    --green: #087f5b;
+    --light-green: #e0f4ea;
+    --blue: #245ac9;
+    --light-blue: #e5edff;
+    --amber: #9b5b00;
+    --light-amber: #fff0cc;
+    --panel-radius: 6px;
+    --inner-radius: 4px;
+    --small-radius: 2px;
+    --border: 1.5px solid var(--black);
+    --shadow: 3px 3px 0 rgba(3, 3, 4, 0.12);
+    --sans:
+    Inter,
+    "Helvetica Neue",
+    Arial,
+    sans-serif;
+    --mono:
+    "SFMono-Regular",
+    Consolas,
+    "Liberation Mono",
+    monospace;
+}
+
+.vouch-app {
+    min-width: 320px;
+    background: var(--page);
+}
+
+.vouch-app {
+    min-height: 100vh;
+    margin: 0;
+    background:
+    linear-gradient(
+    rgba(3, 3, 4, 0.035) 1px,
+    transparent 1px
+    ),
+    linear-gradient(
+    90deg,
+    rgba(3, 3, 4, 0.035) 1px,
+    transparent 1px
+    ),
+    var(--page);
+    background-size: 28px 28px;
+    color: var(--black);
+    font-family: var(--sans);
+    letter-spacing: -0.025em;
+    -webkit-font-smoothing: antialiased;
+}
+
+.vouch-app button,
+.vouch-app code,
+.vouch-app pre {
+    font: inherit;
+}
+
+.vouch-app button {
+    color: inherit;
+}
+
+.vouch-app button:focus-visible {
+    outline: 3px solid rgba(237, 55, 2, 0.28);
+    outline-offset: 2px;
+}
+
+.vouch-app h1,
+.vouch-app h2,
+.vouch-app h3,
+.vouch-app p {
+    margin-top: 0;
+}
+
+.vouch-app h1,
+.vouch-app h2,
+.vouch-app h3,
+.vouch-app strong,
+.vouch-app button {
+    letter-spacing: -0.05em;
+}
+
+.vouch-app {
+    width: min(1500px, calc(100% - 48px));
+    margin: 0 auto;
+    padding: 24px 0 36px;
+}
+
+.vouch-app .v-panel {
+    background: var(--panel);
+    border: var(--border);
+    border-radius: var(--panel-radius);
+    box-shadow: var(--shadow);
+}
+
+.vouch-app .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 86px;
+    padding: 16px;
+    gap: 24px;
+}
+
+.vouch-app .brand-block,
+.vouch-app .finding-title-block,
+.vouch-app .queued-copy {
+    display: flex;
+    align-items: center;
+}
+
+.vouch-app .brand-block {
+    gap: 12px;
+}
+
+.vouch-app .brand-mark {
+    display: grid;
+    width: 50px;
+    height: 50px;
+    flex: 0 0 50px;
+    place-items: center;
+    background: var(--black);
+    border: var(--border);
+    border-radius: var(--inner-radius);
+}
+
+.vouch-app .brand-mark svg {
+    width: 27px;
+    fill: none;
+    stroke: var(--white);
+    stroke-linecap: square;
+    stroke-linejoin: miter;
+    stroke-width: 1.8;
+}
+
+.vouch-app .brand-mark .brand-mark-check {
+    stroke: var(--orange);
+    stroke-width: 2.7;
+}
+
+.vouch-app .brand-name {
+    font-size: 19px;
+    font-weight: 850;
+    letter-spacing: -0.065em;
+}
+
+.vouch-app .brand-block p {
+    margin: 3px 0 0;
+    color: var(--brown-gray);
+    font-size: 12px;
+}
+
+.vouch-app .runtime-status {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-width: 270px;
+    padding: 5px 5px 5px 14px;
+    gap: 14px;
+    background: var(--white);
+    border: var(--border);
+    border-radius: var(--inner-radius);
+}
+
+.vouch-app .runtime-details strong,
+.vouch-app .runtime-details small {
+    display: block;
+}
+
+.vouch-app .runtime-details strong {
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 800;
+}
+
+.vouch-app .runtime-details small {
+    margin-top: 3px;
+    color: var(--brown-gray);
+    font-size: 10px;
+}
+
+.vouch-app .status-switch {
+    display: grid;
+    width: 55px;
+    height: 37px;
+    flex: 0 0 55px;
+    place-items: center;
+    background: var(--orange);
+    border: 1.5px solid var(--black);
+    border-radius: var(--small-radius);
+    color: var(--white);
+    font-size: 13px;
+    font-weight: 850;
+    box-shadow: 2px 2px 0 var(--black);
+}
+
+.vouch-app .workspace {
+    display: grid;
+    grid-template-columns:
+    minmax(340px, 0.84fr)
+    minmax(560px, 1.42fr);
+    gap: 12px;
+    margin-top: 12px;
+    align-items: start;
+}
+
+.vouch-app .input-column {
+    min-width: 0;
+    position: sticky;
+    top: 12px;
+    padding: 21px;
+}
+
+.vouch-app .section-heading,
+.vouch-app .progress-topline,
+.vouch-app .findings-heading,
+.vouch-app .tile-heading,
+.vouch-app .finding-actions,
+.vouch-app .patch-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+}
+
+.vouch-app .eyebrow,
+.vouch-app .content-label,
+.vouch-app .metric-label,
+.vouch-app .trace-type {
+    color: var(--brown-gray);
+    font-family: var(--mono);
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: -0.025em;
+    text-transform: uppercase;
+}
+
+.vouch-app h1,
+.vouch-app h2 {
+    margin-bottom: 0;
+    font-weight: 800;
+    letter-spacing: -0.07em;
+}
+
+.vouch-app h1 {
+    margin-top: 5px;
+    font-size: clamp(24px, 2.2vw, 31px);
+}
+
+.vouch-app h2 {
+    margin-top: 4px;
+    font-size: 22px;
+}
+
+.vouch-app .language-pill,
+.vouch-app .finding-total {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--black);
+    border-radius: var(--small-radius);
+    color: var(--white);
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 750;
+}
+
+.vouch-app .language-pill {
+    padding: 7px 10px;
+}
+
+.vouch-app .section-copy {
+    max-width: 520px;
+    margin: 12px 0 17px;
+    color: var(--brown-gray);
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.vouch-app .code-input,
+.vouch-app .patch-code {
+    overflow: hidden;
+    background: var(--black);
+    border: var(--border);
+    border-radius: var(--inner-radius);
+}
+
+.vouch-app .code-toolbar,
+.vouch-app .patch-toolbar {
+    display: flex;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 11px 14px;
+    background: #191919;
+    border-bottom: 1px solid #343434;
+    color: #aaa39d;
+    font-family: var(--mono);
+    font-size: 9px;
+}
+
+.vouch-app .code-input pre {
+    height: 448px;
+    margin: 0;
+    padding: 17px;
+    overflow: auto;
+    color: #deddd9;
+    font-family: var(--mono);
+    font-size: 10px;
+    line-height: 1.72;
+    letter-spacing: -0.045em;
+    tab-size: 4;
+}
+
+.vouch-app .diff-meta {
+    color: #96918d;
+}
+
+.vouch-app .diff-remove {
+    color: #ff8c82;
+}
+
+.vouch-app .diff-add {
+    color: #8fe0b8;
+}
+
+.vouch-app .diff-hunk {
+    color: #ff9a75;
+}
+
+.vouch-app .input-actions {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.vouch-app .v-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 42px;
+    gap: 8px;
+    padding: 0 14px;
+    cursor: pointer;
+    border-radius: var(--inner-radius);
+    font-size: 11px;
+    font-weight: 800;
+}
+
+.vouch-app .v-button-primary {
+    background: var(--orange);
+    border: var(--border);
+    color: var(--white);
+    box-shadow: 2px 2px 0 var(--dark-orange);
+}
+
+.vouch-app .v-button-primary:disabled {
+    cursor: wait;
+    opacity: 1;
+}
+
+.vouch-app .v-button-secondary {
+    background: var(--white);
+    border: var(--border);
+    box-shadow: 2px 2px 0 rgba(3, 3, 4, 0.1);
+}
+
+.vouch-app .v-button-secondary:hover {
+    background: #eeeeea;
+}
+
+.vouch-app .v-button-ghost {
+    background: transparent;
+    border: 1.5px solid transparent;
+    color: var(--brown-gray);
+}
+
+.vouch-app .v-button-ghost:hover {
+    border-color: var(--black);
+    color: var(--black);
+}
+
+.vouch-app .v-button-spinner,
+.vouch-app .mini-spinner {
+    display: inline-block;
+    border-style: solid;
+    border-radius: 50%;
+    animation: spin 0.85s linear infinite;
+}
+
+.vouch-app .v-button-spinner {
+    width: 13px;
+    height: 13px;
+    border-width: 2px;
+    border-color: rgba(255, 255, 255, 0.35);
+    border-top-color: var(--white);
+}
+
+.vouch-app .privacy-note {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    margin-top: 12px;
+    color: var(--brown-gray);
+    font-size: 10px;
+}
+
+.vouch-app .privacy-note svg,
+.vouch-app .export-button svg {
+    fill: none;
+    stroke: currentColor;
+    stroke-linecap: square;
+    stroke-linejoin: miter;
+}
+
+.vouch-app .privacy-note svg {
+    width: 14px;
+    stroke-width: 1.8;
+}
+
+.vouch-app .results-column,
+.vouch-app .findings-section {
+    display: grid;
+    min-width: 0;
+    gap: 12px;
+}
+
+.vouch-app .scan-bento {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.vouch-app .progress-panel {
+    grid-column: 1 / -1;
+    padding: 19px 20px;
+}
+
+.vouch-app .progress-count {
+    padding: 7px 9px;
+    background: var(--orange);
+    border: var(--border);
+    border-radius: var(--small-radius);
+    color: var(--white);
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 750;
+}
+
+.vouch-app .progress-track {
+    height: 8px;
+    margin-top: 18px;
+    overflow: hidden;
+    background: #deded9;
+    border: var(--border);
+    border-radius: 1px;
+}
+
+.vouch-app .progress-track span {
+    display: block;
+    width: 72%;
+    height: 100%;
+    background: var(--orange);
+    border-right: 1.5px solid var(--black);
+}
+
+.vouch-app .progress-steps {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 9px;
+    margin: 16px 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.vouch-app .step {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    color: var(--muted);
+    font-size: 10px;
+    font-weight: 700;
+}
+
+.vouch-app .step-icon {
+    display: inline-grid;
+    width: 23px;
+    height: 21px;
+    flex: 0 0 23px;
+    place-items: center;
+    background: var(--white);
+    border: 1.5px solid var(--silver);
+    border-radius: var(--small-radius);
+    font-family: var(--mono);
+    font-size: 8px;
+}
+
+.vouch-app .step.complete {
+    color: var(--black);
+}
+
+.vouch-app .step.complete .step-icon {
+    background: var(--black);
+    border-color: var(--black);
+    color: var(--white);
+}
+
+.vouch-app .step.active {
+    color: var(--dark-orange);
+}
+
+.vouch-app .step.active .step-icon {
+    background: var(--orange);
+    border-color: var(--black);
+    color: var(--white);
+    animation: pulse 1.35s ease-in-out infinite;
+}
+
+.vouch-app .metric-card {
+    grid-column: span 2;
+    min-height: 112px;
+    padding: 14px;
+}
+
+.vouch-app .metric-card strong,
+.vouch-app .metric-card small {
+    display: block;
+}
+
+.vouch-app .metric-card strong {
+    margin-top: 9px;
+    font-size: 27px;
+    font-weight: 850;
+    line-height: 1;
+}
+
+.vouch-app .metric-card small {
+    margin-top: 11px;
+    color: var(--brown-gray);
+    font-size: 9px;
+}
+
+.vouch-app .metric-dark {
+    background: var(--black);
+    color: var(--white);
+}
+
+.vouch-app .metric-dark .metric-label,
+.vouch-app .metric-dark small {
+    color: #aaa39d;
+}
+
+.vouch-app .metric-orange {
+    background: var(--orange);
+}
+
+.vouch-app .metric-orange .metric-label,
+.vouch-app .metric-orange small {
+    color: #3c1206;
+}
+
+.vouch-app .findings-heading {
+    min-height: 54px;
+    padding: 0 4px;
+}
+
+.vouch-app .finding-total {
+    width: 23px;
+    height: 23px;
+    margin-left: 4px;
+    background: var(--orange);
+    border: var(--border);
+    vertical-align: 2px;
+}
+
+.vouch-app .export-button svg {
+    width: 15px;
+    stroke-width: 1.8;
+}
+
+.vouch-app .finding-board {
+    min-width: 0;
+    overflow: hidden;
+    background: #e8e7e1;
+}
+
+.vouch-app .finding-grid {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    grid-template-areas:
+    "explain explain explain explain explain trace trace trace trace trace trace trace"
+    "patch patch patch patch patch patch patch patch verify verify verify verify";
+    gap: 8px;
+    padding: 10px;
+    align-items: stretch;
+}
+
+.vouch-app .finding-grid > .v-panel {
+    box-shadow: none;
+}
+
+.vouch-app .finding-grid > .explanation-tile {
+    grid-area: explain;
+}
+
+.vouch-app .finding-grid > .trace-tile {
+    grid-area: trace;
+}
+
+.vouch-app .finding-grid > .patch-tile {
+    grid-area: patch;
+}
+
+.vouch-app .finding-grid > .verification-tile {
+    grid-area: verify;
+}
+
+.vouch-app .bento-tile {
+    min-width: 0;
+}
+
+.vouch-app .finding-summary {
+    background: var(--panel);
+    border-bottom: var(--border);
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns:
+    minmax(250px, 1fr)
+    auto;
+    gap: 16px 24px;
+    padding: 18px;
+}
+
+.vouch-app .finding-title-block {
+    gap: 10px;
+}
+
+.vouch-app .finding-title-block h3,
+.vouch-app .queued-copy h3 {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 850;
+}
+
+.vouch-app .finding-title-block p,
+.vouch-app .queued-copy p {
+    margin: 3px 0 0;
+    color: var(--brown-gray);
+    font-family: var(--mono);
+    font-size: 9px;
+}
+
+.vouch-app .severity,
+.vouch-app .verification {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: var(--border);
+    border-radius: var(--small-radius);
+    font-size: 9px;
+    font-weight: 850;
+}
+
+.vouch-app .severity {
+    min-width: 48px;
+    padding: 7px 8px;
+    text-transform: uppercase;
+}
+
+.vouch-app .severity-high {
+    background: var(--orange);
+    color: var(--white);
+}
+
+.vouch-app .severity-low {
+    background: var(--light-blue);
+    color: var(--blue);
+}
+
+.vouch-app .verification {
+    gap: 7px;
+    padding: 7px 9px;
+}
+
+.vouch-app .verification-success {
+    align-self: start;
+    background: var(--light-green);
+    color: var(--green);
+}
+
+.vouch-app .verification-check {
+    display: grid;
+    width: 16px;
+    height: 16px;
+    place-items: center;
+    background: var(--green);
+    color: var(--white);
+    font-size: 9px;
+}
+
+.vouch-app .summary-location,
+.vouch-app .summary-triage {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding-top: 13px;
+    border-top: 1.5px solid var(--black);
+    font-size: 10px;
+}
+
+.vouch-app .summary-location {
+    font-family: var(--mono);
+}
+
+.vouch-app .summary-location strong {
+    padding: 3px 5px;
+    background: var(--black);
+    color: var(--white);
+    font-size: 8px;
+}
+
+.vouch-app .summary-triage {
+    justify-content: flex-end;
+    color: var(--brown-gray);
+    font-weight: 750;
+}
+
+.vouch-app .verdict-dot {
+    width: 8px;
+    height: 8px;
+    background: var(--orange);
+    border: 1px solid var(--black);
+}
+
+.vouch-app .explanation-tile {
+    grid-column: span 5;
+    display: flex;
+    min-height: 210px;
+    flex-direction: column;
+    padding: 17px;
+}
+
+.vouch-app .tile-heading {
+    justify-content: flex-start;
+    gap: 9px;
+}
+
+.vouch-app .tile-heading > div small {
+    display: block;
+    margin-top: 2px;
+    color: var(--muted);
+    font-size: 8px;
+}
+
+.vouch-app .tile-index {
+    display: inline-grid;
+    width: 25px;
+    height: 23px;
+    flex: 0 0 25px;
+    place-items: center;
+    background: var(--black);
+    color: var(--white);
+    font-family: var(--mono);
+    font-size: 8px;
+    font-weight: 800;
+}
+
+.vouch-app .tile-index-orange {
+    background: var(--orange);
+    color: var(--black);
+}
+
+.vouch-app .explanation-tile > p {
+    margin: 17px 0 18px;
+    color: #4e4742;
+    font-size: 11px;
+    line-height: 1.65;
+}
+
+.vouch-app .explanation-tile code {
+    padding: 2px 4px;
+    background: #e6e4de;
+    border: 1px solid var(--silver);
+    border-radius: 1px;
+    color: var(--dark-orange);
+    font-family: var(--mono);
+    font-size: 9px;
+}
+
+.vouch-app .confidence-row {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    margin-top: auto;
+    padding-top: 12px;
+    border-top: 1.5px solid var(--black);
+    color: var(--brown-gray);
+    font-size: 9px;
+}
+
+.vouch-app .confidence-row strong {
+    color: var(--orange);
+    font-family: var(--mono);
+    font-size: 20px;
+}
+
+.vouch-app .trace-tile {
+    grid-column: span 7;
+    padding: 17px;
+    background: #efeee9;
+}
+
+.vouch-app .context-trace {
+    display: grid;
+    grid-template-columns:
+    minmax(0, 1fr)
+    19px
+    minmax(0, 0.8fr)
+    19px
+    minmax(0, 1fr);
+    align-items: center;
+    margin-top: 25px;
+}
+
+.vouch-app .trace-node {
+    padding: 10px;
+    min-width: 0;
+    min-height: 108px;
+    background: var(--white);
+    border: var(--border);
+    border-radius: var(--inner-radius);
+}
+
+.vouch-app .trace-node strong,
+.vouch-app .trace-node code {
+    display: block;
+}
+
+.vouch-app .trace-node strong {
+    margin-top: 9px;
+    font-size: 10px;
+}
+
+.vouch-app .trace-node code {
+    margin-top: 7px;
+    overflow: hidden;
+    color: var(--brown-gray);
+    font-family: var(--mono);
+    font-size: 9px;
+    overflow-x: auto;
+    white-space: nowrap;
+}
+
+.vouch-app .trace-danger {
+    background: #fff0ea;
+    border-color: var(--orange);
+}
+
+.vouch-app .trace-danger .trace-type {
+    color: var(--dark-orange);
+}
+
+.vouch-app .trace-arrow {
+    color: var(--orange);
+    font-family: var(--mono);
+    font-size: 16px;
+    font-weight: 900;
+    text-align: center;
+}
+
+.vouch-app .patch-tile {
+    grid-column: span 8;
+    padding: 17px;
+}
+
+.vouch-app .patch-heading {
+    justify-content: space-between;
+}
+
+.vouch-app .patch-heading > div {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+}
+
+.vouch-app .patch-label {
+    padding: 5px 7px;
+    background: #e8e7e2;
+    border: 1px solid var(--silver);
+    border-radius: var(--small-radius);
+    color: var(--brown-gray);
+    font-family: var(--mono);
+    font-size: 8px;
+}
+
+.vouch-app .patch-code {
+    margin-top: 15px;
+}
+
+.vouch-app .patch-code pre {
+    margin: 0;
+    padding: 15px;
+    overflow: auto;
+    color: #deddd9;
+    font-family: var(--mono);
+    font-size: 9px;
+    line-height: 1.7;
+}
+
+.vouch-app .patch-code code span {
+    display: block;
+    min-width: max-content;
+    margin: 0 -15px;
+    padding: 0 15px;
+}
+
+.vouch-app .patch-context {
+    color: #aaa39d;
+}
+
+.vouch-app .patch-code .diff-remove {
+    background: rgba(237, 55, 2, 0.15);
+    border-left: 3px solid #ff6945;
+}
+
+.vouch-app .patch-code .diff-add {
+    background: rgba(8, 127, 91, 0.2);
+    border-left: 3px solid #36bd8c;
+}
+
+.vouch-app .verification-tile {
+    grid-column: span 4;
+    padding: 17px;
+    background: var(--black);
+    color: var(--white);
+}
+
+.vouch-app .verification-tile .content-label {
+    color: #c5bdb6;
+}
+
+.vouch-app .verification-hero {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 18px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #404043;
+}
+
+.vouch-app .verification-hero > span {
+    display: grid;
+    width: 36px;
+    height: 36px;
+    flex: 0 0 36px;
+    place-items: center;
+    background: var(--orange);
+    border: 1.5px solid var(--white);
+    color: var(--white);
+    font-size: 16px;
+    font-weight: 900;
+}
+
+.vouch-app .verification-hero strong,
+.vouch-app .verification-hero small {
+    display: block;
+}
+
+.vouch-app .verification-hero strong {
+    font-size: 12px;
+}
+
+.vouch-app .verification-hero small {
+    margin-top: 4px;
+    color: #aaa39d;
+    font-size: 8px;
+}
+
+.vouch-app .verification-list {
+    display: grid;
+    gap: 0;
+    margin: 10px 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.vouch-app .verification-list li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 9px 0;
+    border-bottom: 1px solid #333336;
+    color: #c5bdb6;
+    font-size: 9px;
+}
+
+.vouch-app .verification-list strong {
+    color: #8fe0b8;
+    font-family: var(--mono);
+    font-size: 8px;
+    text-transform: uppercase;
+}
+
+.vouch-app .retry-note {
+    margin: 13px 0 0;
+    color: #aaa39d;
+    font-size: 8px;
+    line-height: 1.55;
+}
+
+.vouch-app .finding-actions {
+    border-top: var(--border);
+    grid-column: 1 / -1;
+    padding: 13px 15px;
+    background: #efeee9;
+}
+
+.vouch-app .finding-actions p {
+    margin: 4px 0 0;
+    color: var(--brown-gray);
+    font-size: 9px;
+}
+
+.vouch-app .action-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 7px;
+}
+
+.vouch-app .finding-actions .v-button {
+    min-height: 36px;
+    font-size: 9px;
+}
+
+.vouch-app .queued-finding {
+    display: grid;
+    grid-template-columns:
+    minmax(0, 1fr)
+    minmax(0, 0.5fr)
+    auto;
+    align-items: center;
+    gap: 18px;
+    padding: 14px;
+}
+
+.vouch-app .queued-copy {
+    gap: 9px;
+}
+
+.vouch-app .queue-progress {
+    display: grid;
+    gap: 6px;
+}
+
+.vouch-app .queue-progress span {
+    position: relative;
+    height: 7px;
+    overflow: hidden;
+    background: #d1d1cc;
+    border: 1px solid rgba(3, 3, 4, 0.1);
+    border-radius: 1px;
+}
+
+.vouch-app .queue-progress span:nth-child(2) {
+    width: 72%;
+}
+
+.vouch-app .queue-progress span:nth-child(3) {
+    width: 48%;
+}
+
+.vouch-app .queue-progress span::after {
+    position: absolute;
+    inset: 0;
+    background:
+    linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.7),
+    transparent
+    );
+    content: "";
+    transform: translateX(-100%);
+    animation: shimmer 1.7s ease-in-out infinite;
+}
+
+.vouch-app .verification-pending {
+    background: var(--light-amber);
+    color: var(--amber);
+}
+
+.vouch-app .mini-spinner {
+    width: 11px;
+    height: 11px;
+    border-width: 1.5px;
+    border-color: rgba(155, 91, 0, 0.25);
+    border-top-color: var(--amber);
+}
+
+.vouch-app .app-footer {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 18px 3px 0;
+    color: var(--brown-gray);
+    font-family: var(--mono);
+    font-size: 8px;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes pulse {
+    50% {
+        opacity: 0.55;
+    }
+}
+
+@keyframes shimmer {
+    100% {
+        transform: translateX(100%);
+    }
+}
+
+@media (max-width: 1180px) {
+.vouch-app .workspace {
+    grid-template-columns:
+    minmax(320px, 0.8fr)
+    minmax(500px, 1.2fr);
+}
+}
+
+@media (max-width: 960px) {
+.vouch-app .workspace {
+    grid-template-columns: 1fr;
+}
+
+.vouch-app .input-column {
+    position: static;
+}
+
+.vouch-app .code-input pre {
+    height: 340px;
+}
+}
+
+@media (min-width: 961px) and (max-width: 1280px) {
+.vouch-app .finding-grid {
+    grid-template-areas:
+    "explain explain explain explain explain explain explain explain explain explain explain explain"
+    "trace trace trace trace trace trace trace trace trace trace trace trace"
+    "patch patch patch patch patch patch patch verify verify verify verify verify";
+}
+
+.vouch-app .finding-title-block {
+    min-width: 0;
+}
+
+.vouch-app .finding-summary {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+}
+
+.vouch-app .summary-triage {
+    justify-content: flex-start;
+}
+
+.vouch-app .finding-actions {
+    align-items: flex-start;
+    flex-direction: column;
+}
+
+.vouch-app .action-buttons {
+    justify-content: flex-start;
+}
+}
+
+@media (max-width: 680px) {
+.vouch-app .finding-grid {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "explain" "trace" "patch" "verify";
+    padding: 8px;
+}
+
+.vouch-app {
+    width: min(100% - 24px, 1500px);
+    padding-top: 12px;
+}
+
+.vouch-app .topbar,
+.vouch-app .findings-heading,
+.vouch-app .finding-actions {
+    align-items: flex-start;
+    flex-direction: column;
+}
+
+.vouch-app .runtime-status,
+.vouch-app .export-button {
+    width: 100%;
+    min-width: 0;
+}
+
+.vouch-app .input-column,
+.vouch-app .progress-panel {
+    padding: 17px;
+}
+
+.vouch-app .metric-card {
+    grid-column: span 3;
+}
+
+.vouch-app .metric-card:last-child {
+    grid-column: 1 / -1;
+}
+
+.vouch-app .progress-steps {
+    grid-template-columns: repeat(2, 1fr);
+}
+
+.vouch-app .finding-summary {
+    grid-template-columns: 1fr;
+}
+
+.vouch-app .summary-triage {
+    justify-content: flex-start;
+}
+
+.vouch-app .context-trace {
+    grid-template-columns: 1fr;
+    gap: 7px;
+}
+
+.vouch-app .trace-arrow {
+    transform: rotate(90deg);
+}
+
+.vouch-app .queued-finding {
+    grid-template-columns: 1fr;
+}
+
+.vouch-app .action-buttons {
+    display: grid;
+    width: 100%;
+    grid-template-columns: 1fr;
+}
+
+.vouch-app .app-footer {
+    flex-direction: column;
+}
+}
+
+@media (max-width: 440px) {
+.vouch-app .input-actions,
+.vouch-app .progress-steps,
+.vouch-app .scan-bento {
+    grid-template-columns: 1fr;
+}
+
+.vouch-app .metric-card,
+.vouch-app .metric-card:last-child {
+    grid-column: 1;
+}
+
+.vouch-app .brand-block p {
+    max-width: 190px;
+}
+}
+
+@media (prefers-reduced-motion: reduce) {
+.vouch-app *,
+.vouch-app *::before,
+.vouch-app *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+}
+}
+/* ===== ADDITIONS (states the prototype did not have) ===== */
+.vouch-app .status-switch.is-off { background: var(--silver); color: var(--black); box-shadow: 2px 2px 0 rgba(3,3,4,.25); }
+.vouch-app .notice { margin-top: 12px; padding: 12px 16px; background: var(--light-amber); border: var(--border); border-radius: var(--panel-radius); color: var(--amber); font-size: 11px; line-height: 1.55; }
+.vouch-app .notice code { font-family: var(--mono); font-size: 10px; }
+.vouch-app a.v-button { text-decoration: none; }
+.vouch-app .v-button:disabled { opacity: .5; cursor: not-allowed; }
+.vouch-app .v-button-primary:disabled { cursor: wait; opacity: 1; }
+
+.vouch-app .severity-critical { background: #7f1d1d; color: var(--white); }
+.vouch-app .severity-medium { background: var(--light-amber); color: var(--amber); }
+.vouch-app .verification-warn { align-self: start; background: var(--light-amber); color: var(--amber); }
+.vouch-app .verification-danger { align-self: start; background: #fde4de; color: var(--dark-orange); }
+.vouch-app .verification-neutral { align-self: start; background: #e8e7e2; color: var(--brown-gray); }
+.vouch-app .verification-warn .verification-check { background: var(--amber); }
+.vouch-app .verification-danger .verification-check { background: var(--dark-orange); }
+.vouch-app .verification-neutral .verification-check { background: var(--brown-gray); }
+.vouch-app .verdict-fp { background: var(--silver); }
+.vouch-app .verdict-none { background: var(--white); }
+
+.vouch-app .hero-warn > span { background: var(--amber); }
+.vouch-app .hero-danger > span { background: var(--dark-orange); }
+.vouch-app .hero-neutral > span { background: #555; }
+.vouch-app .verification-list .pass { color: #8fe0b8; }
+.vouch-app .verification-list .fail { color: #ff8c82; }
+.vouch-app .verification-list .note { color: #aaa39d; }
+.vouch-app .verification-list li span { min-width: 0; overflow-wrap: anywhere; }
+
+.vouch-app .context-trace-2 { grid-template-columns: minmax(0, 1fr) 19px minmax(0, 1fr); }
+.vouch-app .context-trace-1 { grid-template-columns: minmax(0, 1fr); }
+.vouch-app .trace-node p { margin: 9px 0 0; color: #4e4742; font-size: 10px; line-height: 1.5; }
+.vouch-app .trace-node p code { padding: 1px 3px; background: #e6e4de; border: 1px solid var(--silver); color: var(--dark-orange); font-family: var(--mono); font-size: 9px; }
+.vouch-app .tile-empty { margin: 15px 0 0; color: var(--brown-gray); font-size: 11px; }
+.vouch-app .empty-state { padding: 28px; color: var(--brown-gray); font-size: 12px; text-align: center; }
+.vouch-app .empty-state.is-error { color: var(--dark-orange); border-color: var(--orange); }
+.vouch-app .progress-track span { transition: width .4s ease; }
+.vouch-app .explanation-tile > p i { color: var(--brown-gray); }
+
+/* ===== GRADIO GLUE: make Gradio's own widgets match the prototype ===== */
+.gradio-container { max-width: none !important; padding: 0 !important; background: #d8d8d4 !important; }
+.vouch-app { width: min(1500px, calc(100% - 48px)); margin: 0 auto; padding: 24px 0 36px; gap: 0 !important; }
+.vouch-app .workspace { display: grid !important; gap: 12px; margin-top: 12px; }
+.vouch-app .workspace > * { min-width: 0 !important; }
+.vouch-app .block, .vouch-app .html-container, .vouch-app .prose { background: transparent; border: 0; box-shadow: none; padding: 0; }
+.vouch-app .input-column { background: var(--panel) !important; border: var(--border) !important; border-radius: var(--panel-radius) !important; box-shadow: var(--shadow) !important; gap: 0 !important; }
+.vouch-app .code-input textarea { height: 448px; padding: 17px; background: var(--black) !important; color: #deddd9 !important; border: 0 !important; border-radius: 0 !important; box-shadow: none !important; font-family: var(--mono); font-size: 11px; line-height: 1.7; }
+.vouch-app .code-input { border: var(--border) !important; border-radius: var(--inner-radius) !important; overflow: hidden; background: var(--black) !important; }
+.vouch-app button.v-button { min-height: 42px; border: var(--border) !important; border-radius: var(--inner-radius) !important; font-size: 11px; font-weight: 800; }
+.vouch-app button.v-button-primary { background: var(--orange) !important; color: var(--white) !important; box-shadow: 2px 2px 0 var(--dark-orange) !important; }
+.vouch-app button.v-button-secondary { background: var(--white) !important; color: var(--black) !important; box-shadow: 2px 2px 0 rgba(3,3,4,.1) !important; }
+.vouch-app button.v-button-ghost { background: transparent !important; color: var(--brown-gray) !important; border-color: transparent !important; box-shadow: none !important; }
+.vouch-app .input-actions { display: grid !important; grid-template-columns: 1.2fr 1fr; gap: 8px; margin-top: 10px; }
+.vouch-app .html-container h1, .vouch-app .html-container h2, .vouch-app .html-container h3 { color: var(--black); }
+@media (min-width: 961px) { .vouch-app .workspace { grid-template-columns: minmax(340px, .84fr) minmax(560px, 1.42fr); align-items: start; } }
+@media (max-width: 960px) { .vouch-app .workspace { grid-template-columns: 1fr; } }
+@media (max-width: 680px) { .vouch-app { width: min(100% - 24px, 1500px); padding-top: 12px; } }
+.vouch-app .trace-node p code { display: inline; white-space: normal; overflow: visible; margin: 0; }
